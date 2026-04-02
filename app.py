@@ -219,6 +219,14 @@ button[data-testid="collapsedControl"] { display: none; }
     border-radius: 12px;
 }
 
+/* ── Center expander labels ── */
+[data-testid="stExpander"] summary p,
+[data-testid="stExpander"] summary span,
+[data-testid="stExpander"] details summary {
+    text-align: center !important;
+    justify-content: center !important;
+}
+
 /* ── Share table in expense detail ── */
 .share-row {
     display: grid;
