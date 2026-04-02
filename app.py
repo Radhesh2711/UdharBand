@@ -647,10 +647,14 @@ if st.session_state["step"] == "expenses":
         st.session_state["exp_counter"] = 0
     k = st.session_state["exp_counter"]
 
+    st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Expense Description</div>', unsafe_allow_html=True)
     _, col_form, _ = st.columns([0.5, 4, 0.5])
     with col_form:
-        desc = st.text_input("Expense description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}")
-        amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"exp_amount_{k}")
+        desc = st.text_input("desc", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}", label_visibility="collapsed")
+    st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Amount</div>', unsafe_allow_html=True)
+    _, col_form2, _ = st.columns([0.5, 4, 0.5])
+    with col_form2:
+        amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"exp_amount_{k}", label_visibility="collapsed")
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
     display_names_list = [dn(e, display_map) for e in member_emails]
