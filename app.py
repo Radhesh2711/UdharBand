@@ -414,10 +414,9 @@ if st.session_state["step"] == "home":
 
     if user_groups:
         for g in user_groups:
-            n_events = len(db.get_events(g["id"]))
             _, col_center, _ = st.columns([1, 3, 1])
             with col_center:
-                if st.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True, type="primary"):
+                if st.button(g["name"], key=f"load_{g['id']}", use_container_width=True, type="primary"):
                     st.session_state["current_group"] = g["id"]
                     st.session_state["current_event"] = None
                     st.session_state["step"] = "events"
