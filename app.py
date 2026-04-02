@@ -10,7 +10,7 @@ import notifications
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 
-st.set_page_config(page_title="UdharBand", layout="centered", page_icon="💸")
+st.set_page_config(page_title="UdharBand", layout="centered", page_icon="💸", initial_sidebar_state="collapsed")
 
 CUSTOM_CSS = """
 <style>
@@ -376,6 +376,24 @@ if "group" in qp and st.session_state.get("_deep_link_handled") != qp.get("group
     st.session_state["_deep_link_handled"] = qp.get("group", "") + qp.get("event", "")
     st.query_params.clear()
 
+# Auto-collapse sidebar when navigating to a group
+if st.session_state.get("_collapse_sidebar"):
+    st.session_state.pop("_collapse_sidebar")
+    st.markdown("""
+    <script>
+        var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+        if (sidebar) { sidebar.setAttribute("aria-expanded", "false"); }
+        var btn = window.parent.document.querySelector('[data-testid="stSidebar"] button[kind="header"]');
+        if (btn) { btn.click(); }
+        var collapse = window.parent.document.querySelector('button[data-testid="collapsedControl"]');
+        // Force collapse via CSS as fallback
+        var style = document.createElement('style');
+        style.textContent = 'section[data-testid="stSidebar"] { transform: translateX(-100%); }';
+        window.parent.document.head.appendChild(style);
+        setTimeout(function() { style.remove(); }, 100);
+    </script>
+    """, unsafe_allow_html=True)
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 user_groups = db.get_user_groups(user_email)
@@ -388,6 +406,7 @@ if user_groups:
             st.session_state["current_group"] = g["id"]
             st.session_state["current_event"] = None
             st.session_state["step"] = "events"
+            st.session_state["_collapse_sidebar"] = True
             st.rerun()
         if can_delete_group(user_email, g):
             if col2.button("X", key=f"del_{g['id']}"):
