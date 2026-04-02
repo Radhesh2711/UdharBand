@@ -43,7 +43,7 @@ html, body {
     padding: 1rem 1.5rem;
     margin-bottom: 0.6rem;
     display: grid;
-    grid-template-columns: 1fr 40px 1fr 80px;
+    grid-template-columns: 1fr 1fr 80px;
     align-items: center;
     gap: 0 0.5rem;
 }
@@ -364,7 +364,6 @@ def render_settlement_card(debtor_name, creditor_name, amount):
     st.markdown(f"""
     <div class="settlement-card">
         <span class="settlement-name-left"><span style="color: #e74c3c;">&#9660;</span> {debtor_name}</span>
-        <span class="settlement-arrow">→</span>
         <span class="settlement-name-right"><span style="color: #00ce9e;">&#9650;</span> {creditor_name}</span>
         <span class="settlement-amount">${amount:.2f}</span>
     </div>
