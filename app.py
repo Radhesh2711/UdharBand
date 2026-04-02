@@ -221,35 +221,41 @@ button[data-testid="collapsedControl"] { display: none; }
 .share-status.owes { color: #fd79a8; }
 .share-status.paid { color: #00ce9e; }
 
-/* ── Styled button containers ── */
-.blue-btn button {
+/* ── Styled buttons via marker + sibling selector ── */
+.blue-btn-marker + div button,
+.blue-btn-marker ~ div button {
     background-color: #2d7dd2 !important;
     color: white !important;
     border: none !important;
     border-radius: 12px !important;
     font-weight: 600 !important;
 }
-.blue-btn button:hover {
+.blue-btn-marker + div button:hover,
+.blue-btn-marker ~ div button:hover {
     background-color: #3d8fe4 !important;
 }
-.red-btn button {
+.red-btn-marker + div button,
+.red-btn-marker ~ div button {
     background-color: #c0392b !important;
     color: white !important;
     border: none !important;
     border-radius: 12px !important;
     font-weight: 600 !important;
 }
-.red-btn button:hover {
+.red-btn-marker + div button:hover,
+.red-btn-marker ~ div button:hover {
     background-color: #e74c3c !important;
 }
-.yellow-btn button {
+.yellow-btn-marker + div button,
+.yellow-btn-marker ~ div button {
     background-color: #b8860b !important;
     color: white !important;
     border: none !important;
     border-radius: 12px !important;
     font-weight: 600 !important;
 }
-.yellow-btn button:hover {
+.yellow-btn-marker + div button:hover,
+.yellow-btn-marker ~ div button:hover {
     background-color: #d4a017 !important;
 }
 /* Vertically align columns */
@@ -364,11 +370,11 @@ def render_member_chips(emails, display_map):
 
 
 def styled_button(label, key, color_class, container=None, use_container_width=True):
-    """Render a button wrapped in a color-styled div. Returns True if clicked."""
+    """Render a button with color styling using a CSS marker + sibling selector."""
     target = container or st
-    target.markdown(f'<div class="{color_class}">', unsafe_allow_html=True)
+    # Inject a marker div; the next sibling (the button's container) gets styled
+    target.markdown(f'<div class="{color_class}-marker" style="display:none;"></div>', unsafe_allow_html=True)
     clicked = target.button(label, key=key, use_container_width=use_container_width)
-    target.markdown('</div>', unsafe_allow_html=True)
     return clicked
 
 
@@ -584,7 +590,7 @@ if st.session_state["step"] == "events":
             total = sum(e["amount"] for e in ev_expenses)
             _, col_center, _ = st.columns([1, 3, 1])
             with col_center:
-                if st.button(f"{ev['name']}  ·  {len(ev_expenses)} expenses  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True):
+                if st.button(f"{ev['name']}  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True):
                     st.session_state["current_event"] = ev["id"]
                     st.session_state["step"] = "expenses"
                     st.rerun()
