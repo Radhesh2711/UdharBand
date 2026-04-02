@@ -8,6 +8,208 @@ from auth import require_login, build_display_map
 from permissions import can_delete_group, can_delete_event, can_delete_expense, can_edit_expense
 import notifications
 
+# ── Custom CSS ────────────────────────────────────────────────────────────────
+
+st.set_page_config(page_title="UdharBand", layout="centered", page_icon="💸")
+
+CUSTOM_CSS = """
+<style>
+/* ── Global ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [class*="st-"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Cards ── */
+.card {
+    background: linear-gradient(135deg, #1E1E30 0%, #252542 100%);
+    border: 1px solid rgba(108, 92, 231, 0.2);
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 0.8rem;
+    transition: all 0.2s ease;
+}
+.card:hover {
+    border-color: rgba(108, 92, 231, 0.5);
+    box-shadow: 0 4px 20px rgba(108, 92, 231, 0.1);
+}
+
+/* ── Settlement cards ── */
+.settlement-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.settlement-arrow {
+    color: #6C5CE7;
+    font-size: 1.4rem;
+    margin: 0 0.8rem;
+}
+.settlement-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #E8E8F0;
+}
+.settlement-amount {
+    background: linear-gradient(135deg, #6C5CE7, #a29bfe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+.settled-card {
+    background: linear-gradient(135deg, #1a2e1a 0%, #163e2e 100%);
+    border: 1px solid rgba(0, 206, 158, 0.3);
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    text-align: center;
+    color: #00ce9e;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* ── Expense cards ── */
+.expense-card {
+    background: linear-gradient(135deg, #1E1E30 0%, #252542 100%);
+    border: 1px solid rgba(108, 92, 231, 0.15);
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.5rem;
+}
+.expense-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+.expense-desc {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #E8E8F0;
+}
+.expense-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #a29bfe;
+}
+.expense-meta {
+    color: #8888aa;
+    font-size: 0.85rem;
+}
+
+/* ── Member chips ── */
+.member-chip {
+    display: inline-block;
+    background: rgba(108, 92, 231, 0.15);
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    margin: 0.2rem 0.3rem 0.2rem 0;
+    font-size: 0.85rem;
+    color: #a29bfe;
+    font-weight: 500;
+}
+
+/* ── Event cards ── */
+.event-card {
+    background: linear-gradient(135deg, #1E1E30 0%, #252542 100%);
+    border: 1px solid rgba(108, 92, 231, 0.2);
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.5rem;
+}
+.event-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #E8E8F0;
+}
+.event-meta {
+    color: #8888aa;
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+}
+
+/* ── Page header ── */
+.page-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6C5CE7, #a29bfe, #fd79a8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.2rem;
+}
+.page-subtitle {
+    color: #8888aa;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Section header ── */
+.section-header {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #E8E8F0;
+    margin: 1.5rem 0 0.8rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(108, 92, 231, 0.3);
+}
+
+/* ── Sidebar styling ── */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0F0F1A 0%, #1A1A2E 100%);
+}
+
+/* ── Button overrides ── */
+.stButton > button[kind="primary"] {
+    border-radius: 12px;
+    font-weight: 600;
+}
+.stButton > button[kind="secondary"] {
+    border-radius: 12px;
+}
+.stButton > button {
+    border-radius: 12px;
+}
+
+/* ── Input overrides ── */
+.stTextInput > div > div > input {
+    border-radius: 12px;
+}
+.stNumberInput > div > div > input {
+    border-radius: 12px;
+}
+.stSelectbox > div > div {
+    border-radius: 12px;
+}
+
+/* ── Share table in expense detail ── */
+.share-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(108, 92, 231, 0.1);
+    font-size: 0.9rem;
+}
+.share-row:last-child {
+    border-bottom: none;
+}
+.share-person { color: #E8E8F0; font-weight: 500; }
+.share-amount { color: #a29bfe; font-weight: 600; }
+.share-owes { color: #fd79a8; font-weight: 500; }
+</style>
+"""
+
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def build_owes_table(members, expenses):
     owes = defaultdict(lambda: defaultdict(float))
@@ -85,15 +287,44 @@ def dn(email, display_map):
     return display_map.get(email, email.split("@")[0])
 
 
-# ── App ───────────────────────────────────────────────────────────────────────
+def render_member_chips(emails, display_map):
+    """Render members as styled chips."""
+    chips = "".join(
+        f'<span class="member-chip">{dn(e, display_map)}</span>' for e in emails
+    )
+    st.markdown(chips, unsafe_allow_html=True)
 
-st.set_page_config(page_title="UdharBand", layout="centered")
+
+def render_settlement_card(debtor_name, creditor_name, amount):
+    st.markdown(f"""
+    <div class="settlement-card">
+        <span class="settlement-name">{debtor_name}</span>
+        <span class="settlement-arrow">→</span>
+        <span class="settlement-name">{creditor_name}</span>
+        <span class="settlement-amount">${amount:.2f}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_expense_card(description, amount, paid_by_name):
+    st.markdown(f"""
+    <div class="expense-card">
+        <div class="expense-header">
+            <span class="expense-desc">{description}</span>
+            <span class="expense-amount">${amount:.2f}</span>
+        </div>
+        <div class="expense-meta">Paid by {paid_by_name}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ── App ───────────────────────────────────────────────────────────────────────
 
 user_email = require_login()
 
-st.title("UdharBand")
+st.markdown('<div class="page-title">UdharBand</div>', unsafe_allow_html=True)
 col_user, col_logout = st.columns([4, 1])
-col_user.caption(f"Logged in as **{user_email}**")
+col_user.markdown(f'<div class="page-subtitle">Logged in as {user_email}</div>', unsafe_allow_html=True)
 if col_logout.button("Logout", type="secondary"):
     st.logout()
 
@@ -119,7 +350,7 @@ if "group" in qp and st.session_state.get("_deep_link_handled") != qp.get("group
 user_groups = db.get_user_groups(user_email)
 
 if user_groups:
-    st.sidebar.header("Your Groups")
+    st.sidebar.markdown("### Your Groups")
     for g in user_groups:
         col1, col2 = st.sidebar.columns([3, 1])
         if col1.button(f"{g['name']}", key=f"load_{g['id']}", use_container_width=True):
@@ -137,7 +368,7 @@ if user_groups:
                 st.rerun()
     st.sidebar.divider()
 
-if st.sidebar.button("+ New Group"):
+if st.sidebar.button("+ New Group", use_container_width=True):
     st.session_state["step"] = "home"
     st.session_state["current_group"] = None
     st.session_state["current_event"] = None
@@ -148,9 +379,9 @@ if st.sidebar.button("+ New Group"):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 if st.session_state["step"] == "home":
-    st.header("Create a New Group")
+    st.markdown('<div class="section-header">Create a New Group</div>', unsafe_allow_html=True)
     name = st.text_input("Group name", placeholder="e.g. Goa Trip, Flatmates")
-    if st.button("Next →"):
+    if st.button("Next →", type="primary"):
         if not name.strip():
             st.error("Please enter a group name.")
         else:
@@ -174,14 +405,17 @@ if st.session_state["step"] == "add_members":
     groups = db.get_user_groups(user_email)
     group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
 
-    st.header(f"Add Members to '{group_name}'")
+    st.markdown(f'<div class="section-header">Add Members to \'{group_name}\'</div>', unsafe_allow_html=True)
 
     if members:
-        st.write("**Current members:**")
         for i, m in enumerate(members):
             c1, c2 = st.columns([5, 1])
-            c1.write(f"{i+1}. {m['display_name']} ({m['email']})")
-            # Don't allow removing yourself if you're the only member
+            c1.markdown(f"""
+            <div class="card" style="padding: 0.6rem 1rem; margin-bottom: 0.4rem;">
+                <span style="font-weight: 600; color: #E8E8F0;">{m['display_name']}</span>
+                <span style="color: #8888aa; font-size: 0.85rem; margin-left: 0.5rem;">{m['email']}</span>
+            </div>
+            """, unsafe_allow_html=True)
             if m["email"] != user_email or len(members) > 1:
                 if c2.button("Remove", key=f"rm_{m['email']}"):
                     db.remove_member(group_id, m["email"])
@@ -191,6 +425,7 @@ if st.session_state["step"] == "add_members":
         st.session_state["member_counter"] = 0
     mk = st.session_state["member_counter"]
 
+    st.markdown("<br>", unsafe_allow_html=True)
     col_name, col_email = st.columns(2)
     with col_name:
         new_name = st.text_input("Name", placeholder="Enter their name", key=f"member_name_{mk}")
@@ -239,17 +474,18 @@ if st.session_state["step"] == "events":
     groups = db.get_user_groups(user_email)
     group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
 
-    st.header(f"{group_name}")
-    st.caption(f"Members: {', '.join(dn(e, display_map) for e in member_emails)}")
+    st.markdown(f'<div class="section-header">{group_name}</div>', unsafe_allow_html=True)
+    render_member_chips(member_emails, display_map)
 
-    st.subheader("Events")
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("**Events**")
 
     # Create new event
     col1, col2 = st.columns([3, 1])
     with col1:
         new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
     with col2:
-        if st.button("Add Event", use_container_width=True):
+        if st.button("Add Event", use_container_width=True, type="primary"):
             if not new_event.strip():
                 st.error("Enter an event name.")
             else:
@@ -269,22 +505,30 @@ if st.session_state["step"] == "events":
             ev_expenses = db.get_expenses(ev["id"])
             total = sum(e["amount"] for e in ev_expenses)
             col_name, col_del = st.columns([4, 1])
-            if col_name.button(
-                f"{ev['name']}  —  {len(ev_expenses)} expenses, total: ${total:.2f}",
-                key=f"ev_{ev['id']}", use_container_width=True
-            ):
-                st.session_state["current_event"] = ev["id"]
-                st.session_state["step"] = "expenses"
-                st.rerun()
+            with col_name:
+                st.markdown(f"""
+                <div class="event-card">
+                    <div class="event-name">{ev['name']}</div>
+                    <div class="event-meta">{len(ev_expenses)} expenses &middot; Total: ${total:.2f}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("Open", key=f"ev_{ev['id']}", use_container_width=True):
+                    st.session_state["current_event"] = ev["id"]
+                    st.session_state["step"] = "expenses"
+                    st.rerun()
             if can_delete_event(user_email, ev):
                 if col_del.button("X", key=f"del_ev_{ev['id']}"):
                     notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email, group_id)
                     db.delete_event(ev["id"])
                     st.rerun()
     else:
-        st.info("No events yet. Create one above.")
+        st.markdown("""
+        <div class="card" style="text-align: center; color: #8888aa;">
+            No events yet. Create one above.
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.divider()
+    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("← Edit Members"):
         st.session_state["step"] = "add_members"
         st.rerun()
@@ -315,9 +559,10 @@ if st.session_state["step"] == "expenses":
     events = db.get_events(group_id)
     event_name = next((ev["name"] for ev in events if ev["id"] == event_id), "Event")
 
-    st.header(f"{group_name} / {event_name}")
-    st.caption(f"Members: {', '.join(dn(e, display_map) for e in member_emails)}")
+    st.markdown(f'<div class="section-header">{group_name} / {event_name}</div>', unsafe_allow_html=True)
+    render_member_chips(member_emails, display_map)
 
+    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("← Back to Events"):
         st.session_state["current_event"] = None
         st.session_state["step"] = "events"
@@ -325,7 +570,7 @@ if st.session_state["step"] == "expenses":
 
     # ── Add Expense ───────────────────────────────────────────────────────────
 
-    st.subheader("Add Expense")
+    st.markdown('<div class="section-header">Add Expense</div>', unsafe_allow_html=True)
 
     if "exp_counter" not in st.session_state:
         st.session_state["exp_counter"] = 0
@@ -371,7 +616,7 @@ if st.session_state["step"] == "expenses":
                     format="%.1f", key=f"rat_{k}_{email}"
                 )
 
-    if st.button("Add Expense", type="primary"):
+    if st.button("Add Expense", type="primary", use_container_width=True):
         if not desc.strip():
             st.error("Enter a description.")
         elif not amount_str.strip():
@@ -410,6 +655,7 @@ if st.session_state["step"] == "expenses":
                     first = next(iter(shares))
                     shares[first] = round(shares[first] + diff, 2)
                 db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+                notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
                 st.session_state["exp_counter"] += 1
                 st.rerun()
         elif split_type == "Ratio":
@@ -424,33 +670,35 @@ if st.session_state["step"] == "expenses":
                     first = next(iter(shares))
                     shares[first] = round(shares[first] + diff, 2)
                 db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+                notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
                 st.session_state["exp_counter"] += 1
                 st.rerun()
 
     # ── Expense History ───────────────────────────────────────────────────────
 
     if expenses:
-        st.divider()
-        st.subheader("Expense History")
+        st.markdown('<div class="section-header">Expense History</div>', unsafe_allow_html=True)
         editing_idx = st.session_state.get("editing_expense")
 
         for i, exp in enumerate(expenses):
             is_editing = editing_idx == i
 
-            with st.expander(
-                f"**{exp['description']}** — {exp['amount']:.2f} (paid by {dn(exp['paid_by'], display_map)})",
-                expanded=is_editing,
-            ):
+            # Render styled card header
+            render_expense_card(exp["description"], exp["amount"], dn(exp["paid_by"], display_map))
+
+            with st.expander("Details", expanded=is_editing, key=f"expander_{i}"):
                 if not is_editing:
-                    split_data = []
+                    # Styled share breakdown
                     for person, share in exp["shares"].items():
-                        owes_to_payer = share if person != exp["paid_by"] else 0
-                        split_data.append({
-                            "Person": dn(person, display_map),
-                            "Share": f"{share:.2f}",
-                            "Owes to " + dn(exp["paid_by"], display_map): f"{owes_to_payer:.2f}" if owes_to_payer > 0 else "-",
-                        })
-                    st.table(pd.DataFrame(split_data).set_index("Person"))
+                        owes = share if person != exp["paid_by"] else 0
+                        owes_html = f'<span class="share-owes">owes ${owes:.2f}</span>' if owes > 0 else '<span style="color: #00ce9e;">paid</span>'
+                        st.markdown(f"""
+                        <div class="share-row">
+                            <span class="share-person">{dn(person, display_map)}</span>
+                            <span class="share-amount">${share:.2f}</span>
+                            {owes_html}
+                        </div>
+                        """, unsafe_allow_html=True)
 
                     btn_cols = st.columns([1, 1, 3])
                     if can_edit_expense(user_email, exp):
@@ -574,17 +822,23 @@ if st.session_state["step"] == "expenses":
     # ── Simplify Expenses ─────────────────────────────────────────────────────
 
     if expenses:
-        st.divider()
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Simplify Expenses", type="primary", use_container_width=True):
             st.session_state["show_simplified"] = True
 
         if st.session_state.get("show_simplified"):
             settlements = simplify_debts(member_emails, expenses)
-            st.subheader("Simplified Settlements")
+            st.markdown('<div class="section-header">Settlements</div>', unsafe_allow_html=True)
             if settlements:
                 for debtor, creditor, amt in settlements:
-                    st.markdown(
-                        f"**{dn(debtor, display_map)}** owes **{dn(creditor, display_map)}** **${amt:.2f}**"
+                    render_settlement_card(
+                        dn(debtor, display_map),
+                        dn(creditor, display_map),
+                        amt,
                     )
             else:
-                st.success("All settled up! No one owes anything.")
+                st.markdown("""
+                <div class="settled-card">
+                    All settled up! No one owes anything.
+                </div>
+                """, unsafe_allow_html=True)

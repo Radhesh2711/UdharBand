@@ -17,15 +17,28 @@ def require_login() -> str:
 
     # Production: Streamlit Community Cloud with Google OAuth
     if not st.user.is_logged_in:
-        st.title("UdharBand")
-        st.info("Please sign in with your Google account to continue.")
-        if st.button("Sign in with Google", type="primary"):
+        st.markdown("""
+        <div style="text-align: center; padding: 3rem 0;">
+            <div style="font-size: 2.5rem; font-weight: 700;
+                 background: linear-gradient(135deg, #6C5CE7, #a29bfe, #fd79a8);
+                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                 margin-bottom: 0.5rem;">UdharBand</div>
+            <div style="color: #8888aa; font-size: 1.1rem; margin-bottom: 2rem;">
+                Split expenses with friends, effortlessly.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Sign in with Google", type="primary", use_container_width=True):
             st.login("google")
         st.stop()
 
     email = st.user.get("email")
     if not email:
-        st.title("UdharBand")
+        st.markdown("""
+        <div style="font-size: 2rem; font-weight: 700;
+             background: linear-gradient(135deg, #6C5CE7, #a29bfe);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+             UdharBand</div>
+        """, unsafe_allow_html=True)
         st.error("Could not retrieve your email. Please try logging in again.")
         if st.button("Try again"):
             st.logout()
