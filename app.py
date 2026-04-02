@@ -632,10 +632,21 @@ if st.session_state["step"] == "expenses":
     render_member_chips(member_emails, display_map)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("← Back to Events"):
-        st.session_state["current_event"] = None
-        st.session_state["step"] = "events"
-        st.rerun()
+    col_back, col_del_ev = st.columns(2)
+    with col_back:
+        if st.button("← Back to Events", use_container_width=True):
+            st.session_state["current_event"] = None
+            st.session_state["step"] = "events"
+            st.rerun()
+    with col_del_ev:
+        current_event_data = next((ev for ev in events if ev["id"] == event_id), None)
+        if current_event_data and can_delete_event(user_email, current_event_data):
+            if st.button("Delete Event", use_container_width=True):
+                notifications.notify_event_deleted(member_emails, group_name, event_name, user_email, group_id)
+                db.delete_event(event_id)
+                st.session_state["current_event"] = None
+                st.session_state["step"] = "events"
+                st.rerun()
 
     # ── Add Expense ───────────────────────────────────────────────────────────
 
