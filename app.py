@@ -91,7 +91,10 @@ st.set_page_config(page_title="UdharBand", layout="centered")
 user_email = require_login()
 
 st.title("UdharBand")
-st.caption(f"Logged in as **{user_email}**")
+col_user, col_logout = st.columns([4, 1])
+col_user.caption(f"Logged in as **{user_email}**")
+if col_logout.button("Logout", type="secondary"):
+    st.logout()
 
 # Steps: home | add_members | events | expenses
 init_state("step", "home")
