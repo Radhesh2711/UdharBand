@@ -304,20 +304,6 @@ if st.session_state["step"] == "expenses":
         st.session_state["step"] = "events"
         st.rerun()
 
-    # ── Who Owes Who table ────────────────────────────────────────────────────
-
-    if expenses:
-        st.subheader("Who Owes Who")
-        # Build table with display names
-        owes_df = build_owes_table(member_emails, expenses)
-        # Rename index and columns to display names
-        rename = {e: dn(e, display_map) for e in member_emails}
-        owes_df.index = [rename.get(idx, idx) for idx in owes_df.index]
-        owes_df.columns = [rename.get(c, c) for c in owes_df.columns]
-        st.markdown("*Rows owe to columns*")
-        st.dataframe(owes_df, use_container_width=True)
-        st.divider()
-
     # ── Add Expense ───────────────────────────────────────────────────────────
 
     st.subheader("Add Expense")
