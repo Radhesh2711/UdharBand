@@ -631,7 +631,116 @@ if st.session_state["step"] == "expenses":
     st.markdown(f'<div style="text-align: center; font-size: 1.2rem; font-weight: 500; color: #a29bfe; margin: 0 0 1.2rem 0;">{event_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
-    # ── Expense History (shown first) ─────────────────────────────────────────
+    # ── Add Expense ───────────────────────────────────────────────────────────
+
+    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Add Expense</div>', unsafe_allow_html=True)
+
+    if "exp_counter" not in st.session_state:
+        st.session_state["exp_counter"] = 0
+    k = st.session_state["exp_counter"]
+
+    desc = st.text_input("Expense description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}")
+    amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"exp_amount_{k}")
+
+    st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
+    display_names_list = [dn(e, display_map) for e in member_emails]
+    paid_idx = st.radio("Paid by", range(len(member_emails)),
+                        format_func=lambda i: display_names_list[i],
+                        horizontal=True, label_visibility="collapsed", key=f"exp_paid_{k}")
+    paid_by = member_emails[paid_idx]
+
+    st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
+    involved = []
+    inv_cols = st.columns(min(len(member_emails), 4))
+    for i, email in enumerate(member_emails):
+        with inv_cols[i % min(len(member_emails), 4)]:
+            if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
+                involved.append(email)
+
+    split_type = st.radio("How to split?", ["Equal", "Percentage", "Ratio"], horizontal=True, key=f"exp_split_{k}")
+
+    split_inputs = {}
+    if split_type == "Percentage" and involved:
+        st.caption("Enter percentage for each involved member (must total 100%):")
+        pcols = st.columns(min(len(involved), 4))
+        for i, email in enumerate(involved):
+            with pcols[i % min(len(involved), 4)]:
+                split_inputs[email] = st.number_input(
+                    dn(email, display_map), min_value=0.0, max_value=100.0, step=0.01,
+                    format="%.2f", key=f"pct_{k}_{email}"
+                )
+    elif split_type == "Ratio" and involved:
+        st.caption("Enter ratio for each involved member:")
+        rcols = st.columns(min(len(involved), 4))
+        for i, email in enumerate(involved):
+            with rcols[i % min(len(involved), 4)]:
+                split_inputs[email] = st.number_input(
+                    dn(email, display_map), min_value=0.0, step=0.1,
+                    format="%.1f", key=f"rat_{k}_{email}"
+                )
+
+    _, col_add_btn, _ = st.columns([2, 1, 2])
+    with col_add_btn:
+        add_clicked = st.button("+ Add Expense", type="primary", use_container_width=True)
+    if add_clicked:
+        if not desc.strip():
+            st.error("Enter a description.")
+        elif not amount_str.strip():
+            st.error("Enter an amount.")
+        else:
+            try:
+                amount = round(float(amount_str.strip()), 2)
+                if amount <= 0:
+                    raise ValueError()
+            except ValueError:
+                amount = None
+                st.error("Enter a valid positive number for amount.")
+        if not desc.strip() or not amount_str.strip() or amount is None:
+            pass
+        elif not involved:
+            st.error("Select at least one person involved.")
+        elif split_type == "Equal":
+            share = round(amount / len(involved), 2)
+            shares = {p: share for p in involved}
+            diff = round(amount - sum(shares.values()), 2)
+            if diff != 0:
+                shares[involved[0]] = round(shares[involved[0]] + diff, 2)
+            db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+            notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
+            st.session_state["exp_counter"] += 1
+            st.rerun()
+        elif split_type == "Percentage":
+            pcts = {m: split_inputs.get(m, 0) for m in involved}
+            total_pct = round(sum(pcts.values()), 2)
+            if abs(total_pct - 100.0) > 0.01:
+                st.error(f"Percentages sum to {total_pct}%. Must be 100%.")
+            else:
+                shares = {p: round(amount * v / 100, 2) for p, v in pcts.items() if v > 0}
+                diff = round(amount - sum(shares.values()), 2)
+                if diff != 0 and shares:
+                    first = next(iter(shares))
+                    shares[first] = round(shares[first] + diff, 2)
+                db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+                notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
+                st.session_state["exp_counter"] += 1
+                st.rerun()
+        elif split_type == "Ratio":
+            ratios = {m: split_inputs.get(m, 0) for m in involved}
+            total_ratio = sum(ratios.values())
+            if total_ratio == 0:
+                st.error("Ratios can't all be zero.")
+            else:
+                shares = {p: round(amount * v / total_ratio, 2) for p, v in ratios.items() if v > 0}
+                diff = round(amount - sum(shares.values()), 2)
+                if diff != 0 and shares:
+                    first = next(iter(shares))
+                    shares[first] = round(shares[first] + diff, 2)
+                db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+                notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
+                st.session_state["exp_counter"] += 1
+                st.rerun()
+
+    # ── Expense History ───────────────────────────────────────────────────────
 
     if expenses:
         st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Expenses</div>', unsafe_allow_html=True)
@@ -802,115 +911,6 @@ if st.session_state["step"] == "expenses":
                     All settled up! No one owes anything.
                 </div>
                 """, unsafe_allow_html=True)
-
-    # ── Add Expense ───────────────────────────────────────────────────────────
-
-    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Add Expense</div>', unsafe_allow_html=True)
-
-    if "exp_counter" not in st.session_state:
-        st.session_state["exp_counter"] = 0
-    k = st.session_state["exp_counter"]
-
-    desc = st.text_input("Expense description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}")
-    amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"exp_amount_{k}")
-
-    st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
-    display_names_list = [dn(e, display_map) for e in member_emails]
-    paid_idx = st.radio("Paid by", range(len(member_emails)),
-                        format_func=lambda i: display_names_list[i],
-                        horizontal=True, label_visibility="collapsed", key=f"exp_paid_{k}")
-    paid_by = member_emails[paid_idx]
-
-    st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
-    involved = []
-    inv_cols = st.columns(min(len(member_emails), 4))
-    for i, email in enumerate(member_emails):
-        with inv_cols[i % min(len(member_emails), 4)]:
-            if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
-                involved.append(email)
-
-    split_type = st.radio("How to split?", ["Equal", "Percentage", "Ratio"], horizontal=True, key=f"exp_split_{k}")
-
-    split_inputs = {}
-    if split_type == "Percentage" and involved:
-        st.caption("Enter percentage for each involved member (must total 100%):")
-        pcols = st.columns(min(len(involved), 4))
-        for i, email in enumerate(involved):
-            with pcols[i % min(len(involved), 4)]:
-                split_inputs[email] = st.number_input(
-                    dn(email, display_map), min_value=0.0, max_value=100.0, step=0.01,
-                    format="%.2f", key=f"pct_{k}_{email}"
-                )
-    elif split_type == "Ratio" and involved:
-        st.caption("Enter ratio for each involved member:")
-        rcols = st.columns(min(len(involved), 4))
-        for i, email in enumerate(involved):
-            with rcols[i % min(len(involved), 4)]:
-                split_inputs[email] = st.number_input(
-                    dn(email, display_map), min_value=0.0, step=0.1,
-                    format="%.1f", key=f"rat_{k}_{email}"
-                )
-
-    _, col_add_btn, _ = st.columns([2, 1, 2])
-    with col_add_btn:
-        add_clicked = st.button("+ Add Expense", type="primary", use_container_width=True)
-    if add_clicked:
-        if not desc.strip():
-            st.error("Enter a description.")
-        elif not amount_str.strip():
-            st.error("Enter an amount.")
-        else:
-            try:
-                amount = round(float(amount_str.strip()), 2)
-                if amount <= 0:
-                    raise ValueError()
-            except ValueError:
-                amount = None
-                st.error("Enter a valid positive number for amount.")
-        if not desc.strip() or not amount_str.strip() or amount is None:
-            pass
-        elif not involved:
-            st.error("Select at least one person involved.")
-        elif split_type == "Equal":
-            share = round(amount / len(involved), 2)
-            shares = {p: share for p in involved}
-            diff = round(amount - sum(shares.values()), 2)
-            if diff != 0:
-                shares[involved[0]] = round(shares[involved[0]] + diff, 2)
-            db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
-            notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
-            st.session_state["exp_counter"] += 1
-            st.rerun()
-        elif split_type == "Percentage":
-            pcts = {m: split_inputs.get(m, 0) for m in involved}
-            total_pct = round(sum(pcts.values()), 2)
-            if abs(total_pct - 100.0) > 0.01:
-                st.error(f"Percentages sum to {total_pct}%. Must be 100%.")
-            else:
-                shares = {p: round(amount * v / 100, 2) for p, v in pcts.items() if v > 0}
-                diff = round(amount - sum(shares.values()), 2)
-                if diff != 0 and shares:
-                    first = next(iter(shares))
-                    shares[first] = round(shares[first] + diff, 2)
-                db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
-                notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
-                st.session_state["exp_counter"] += 1
-                st.rerun()
-        elif split_type == "Ratio":
-            ratios = {m: split_inputs.get(m, 0) for m in involved}
-            total_ratio = sum(ratios.values())
-            if total_ratio == 0:
-                st.error("Ratios can't all be zero.")
-            else:
-                shares = {p: round(amount * v / total_ratio, 2) for p, v in ratios.items() if v > 0}
-                diff = round(amount - sum(shares.values()), 2)
-                if diff != 0 and shares:
-                    first = next(iter(shares))
-                    shares[first] = round(shares[first] + diff, 2)
-                db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
-                notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
-                st.session_state["exp_counter"] += 1
-                st.rerun()
 
     # ── Back / Delete Event row ─────────────────────────────────────────────────
 
