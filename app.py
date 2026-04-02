@@ -396,15 +396,6 @@ if "group" in qp and st.session_state.get("_deep_link_handled") != qp.get("group
     st.session_state["_deep_link_handled"] = qp.get("group", "") + qp.get("event", "")
     st.query_params.clear()
 
-# ── Navigation: back to groups (shown when inside a group) ────────────────────
-
-if st.session_state["step"] not in ("home", "create_group"):
-    if st.button("← My Groups"):
-        st.session_state["step"] = "home"
-        st.session_state["current_group"] = None
-        st.session_state["current_event"] = None
-        st.rerun()
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # HOME: Group list
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -586,14 +577,24 @@ if st.session_state["step"] == "events":
                     st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
-    col_edit, col_delgrp = st.columns(2)
+    group_data = next((g for g in groups if g["id"] == group_id), None)
+    show_delete = group_data and can_delete_group(user_email, group_data)
+    if show_delete:
+        col_back, col_edit, col_delgrp = st.columns(3)
+    else:
+        col_back, col_edit = st.columns(2)
+    with col_back:
+        if st.button("← My Groups", use_container_width=True):
+            st.session_state["step"] = "home"
+            st.session_state["current_group"] = None
+            st.session_state["current_event"] = None
+            st.rerun()
     with col_edit:
-        if st.button("← Edit Members", use_container_width=True):
+        if st.button("Edit Members", use_container_width=True):
             st.session_state["step"] = "add_members"
             st.rerun()
-    with col_delgrp:
-        group_data = next((g for g in groups if g["id"] == group_id), None)
-        if group_data and can_delete_group(user_email, group_data):
+    if show_delete:
+        with col_delgrp:
             if st.button("Delete Group", use_container_width=True):
                 db.delete_group(group_id)
                 st.session_state["step"] = "home"
