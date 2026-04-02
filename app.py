@@ -587,7 +587,7 @@ if st.session_state["step"] == "events":
                     st.session_state["step"] = "expenses"
                     st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
     group_data = next((g for g in groups if g["id"] == group_id), None)
     show_delete = group_data and can_delete_group(user_email, group_data)
     if show_delete:
