@@ -201,6 +201,14 @@ button[data-testid="collapsedControl"] { display: none; }
 .stTextInput > div > div > input::placeholder {
     text-align: center;
 }
+/* ── Center radio buttons ── */
+.stRadio > div {
+    justify-content: center;
+}
+.stRadio > div[role="radiogroup"] {
+    justify-content: center;
+}
+
 .stNumberInput > div > div > input {
     border-radius: 12px;
 }
@@ -657,7 +665,8 @@ if st.session_state["step"] == "expenses":
             if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
                 involved.append(email)
 
-    split_type = st.radio("How to split?", ["Equal", "Percentage", "Ratio"], horizontal=True, key=f"exp_split_{k}")
+    st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
+    split_type = st.radio("Split", ["Equal", "Percentage", "Ratio"], horizontal=True, label_visibility="collapsed", key=f"exp_split_{k}")
 
     split_inputs = {}
     if split_type == "Percentage" and involved:
