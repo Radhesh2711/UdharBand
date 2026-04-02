@@ -221,17 +221,35 @@ button[data-testid="collapsedControl"] { display: none; }
 .share-status.owes { color: #fd79a8; }
 .share-status.paid { color: #00ce9e; }
 
-/* ── Edit / Delete buttons ── */
-.edit-btn + div button,
-.edit-btn ~ div button {
+/* ── Styled button containers ── */
+.blue-btn button {
+    background-color: #2d7dd2 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+}
+.blue-btn button:hover {
+    background-color: #3d8fe4 !important;
+}
+.red-btn button {
+    background-color: #c0392b !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+}
+.red-btn button:hover {
+    background-color: #e74c3c !important;
+}
+.yellow-btn button {
     background-color: #b8860b !important;
     color: white !important;
     border: none !important;
     border-radius: 12px !important;
     font-weight: 600 !important;
 }
-.edit-btn + div button:hover,
-.edit-btn ~ div button:hover {
+.yellow-btn button:hover {
     background-color: #d4a017 !important;
 }
 /* Vertically align columns */
@@ -343,6 +361,15 @@ def render_member_chips(emails, display_map):
         color, bg = CHIP_COLORS[i % len(CHIP_COLORS)]
         chips += f'<span style="display:inline-block;border:1px solid {color};background:{bg};border-radius:20px;padding:0.3rem 0.8rem;margin:0.2rem 0.3rem;font-size:0.85rem;color:{color};font-weight:500;">{dn(e, display_map)}</span>'
     st.markdown(f'<div style="text-align: center;">{chips}</div>', unsafe_allow_html=True)
+
+
+def styled_button(label, key, color_class, container=None, use_container_width=True):
+    """Render a button wrapped in a color-styled div. Returns True if clicked."""
+    target = container or st
+    target.markdown(f'<div class="{color_class}">', unsafe_allow_html=True)
+    clicked = target.button(label, key=key, use_container_width=use_container_width)
+    target.markdown('</div>', unsafe_allow_html=True)
+    return clicked
 
 
 def render_settlement_card(debtor_name, creditor_name, amount):
@@ -548,7 +575,7 @@ if st.session_state["step"] == "events":
     st.markdown(f'<div style="text-align: center; font-size: 1.3rem; font-weight: 600; color: #E8E8F0; margin: 1.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
-    st.markdown('<div style="text-align: center; font-size: 1.1rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Events</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; font-size: 1.1rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Events</div>', unsafe_allow_html=True)
 
     # List existing events
     if events:
@@ -602,12 +629,12 @@ if st.session_state["step"] == "events":
             st.session_state["current_event"] = None
             st.rerun()
     with col_edit:
-        if st.button("Edit Members", use_container_width=True):
+        if styled_button("Edit Members", "edit_members", "blue-btn"):
             st.session_state["step"] = "add_members"
             st.rerun()
     if show_delete:
         with col_delgrp:
-            if st.button("Delete Group", use_container_width=True):
+            if styled_button("Delete Group", "del_group", "red-btn"):
                 db.delete_group(group_id)
                 st.session_state["step"] = "home"
                 st.session_state["current_group"] = None
@@ -654,7 +681,7 @@ if st.session_state["step"] == "expenses":
     with col_del_ev:
         current_event_data = next((ev for ev in events if ev["id"] == event_id), None)
         if current_event_data and can_delete_event(user_email, current_event_data):
-            if st.button("Delete Event", use_container_width=True):
+            if styled_button("Delete Event", "del_event", "red-btn"):
                 notifications.notify_event_deleted(member_emails, group_name, event_name, user_email, group_id)
                 db.delete_event(event_id)
                 st.session_state["current_event"] = None
@@ -795,19 +822,12 @@ if st.session_state["step"] == "expenses":
                     btn_cols = st.columns([1, 1, 3])
                     if can_edit_expense(user_email, exp):
                         with btn_cols[0]:
-                            with st.container():
-                                st.markdown('<div class="edit-btn">', unsafe_allow_html=True)
-                                edit_clicked = st.button("Edit", key=f"edit_{i}", use_container_width=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
-                            if edit_clicked:
+                            if styled_button("Edit", f"edit_{i}", "yellow-btn"):
                                 st.session_state["editing_expense"] = i
                                 st.rerun()
                     if can_delete_expense(user_email, exp):
                         with btn_cols[1]:
-                            with st.container():
-                                st.markdown('<div class="delete-btn">', unsafe_allow_html=True)
-                                del_clicked = st.button("Delete", key=f"del_{i}", use_container_width=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
+                            del_clicked = styled_button("Delete", f"del_{i}", "red-btn")
                             if del_clicked:
                                 notifications.notify_expense_deleted(list(exp["shares"].keys()), group_name, event_name, exp["description"], exp["amount"], user_email, group_id, event_id)
                                 db.delete_expense(exp["id"])
