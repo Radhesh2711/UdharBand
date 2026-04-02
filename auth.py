@@ -47,9 +47,11 @@ def require_login() -> str:
         st.stop()
 
     email = email.strip().lower()
-    name = st.user.get("name")
-    first_name = name.split()[0] if name else None
-    db.ensure_user(email, first_name)
+    if not st.session_state.get("_user_ensured"):
+        name = st.user.get("name")
+        first_name = name.split()[0] if name else None
+        db.ensure_user(email, first_name)
+        st.session_state["_user_ensured"] = True
     return email
 
 

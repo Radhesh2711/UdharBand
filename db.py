@@ -61,6 +61,12 @@ def get_user_groups(email: str) -> list[dict]:
     return groups
 
 
+def get_group(group_id: str) -> dict | None:
+    sb = get_client()
+    resp = sb.table("groups").select("id, name, created_by").eq("id", group_id).execute()
+    return resp.data[0] if resp.data else None
+
+
 def delete_group(group_id: str) -> None:
     sb = get_client()
     sb.table("groups").delete().eq("id", group_id).execute()
@@ -123,6 +129,39 @@ def get_events(group_id: str) -> list[dict]:
         .execute()
     )
     return resp.data
+
+
+def get_events_with_totals(group_id: str) -> list[dict]:
+    """Get events with expense totals in 2 queries instead of N+1."""
+    sb = get_client()
+    events_resp = (
+        sb.table("events")
+        .select("id, group_id, name, created_by, created_at")
+        .eq("group_id", group_id)
+        .order("created_at")
+        .execute()
+    )
+    events = events_resp.data
+    if not events:
+        return events
+
+    event_ids = [e["id"] for e in events]
+    expenses_resp = (
+        sb.table("expenses")
+        .select("event_id, amount")
+        .in_("event_id", event_ids)
+        .execute()
+    )
+
+    totals = {}
+    for exp in expenses_resp.data:
+        eid = exp["event_id"]
+        totals[eid] = totals.get(eid, 0) + float(exp["amount"])
+
+    for ev in events:
+        ev["total"] = round(totals.get(ev["id"], 0), 2)
+
+    return events
 
 
 def delete_event(event_id: str) -> None:

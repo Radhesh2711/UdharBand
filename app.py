@@ -468,8 +468,8 @@ if st.session_state["step"] == "add_members":
     member_emails = [m["email"] for m in members]
 
     # Get group name for header
-    groups = db.get_user_groups(user_email)
-    group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
+    group_data = db.get_group(group_id)
+    group_name = group_data["name"] if group_data else "Group"
 
     st.markdown(f'<div class="section-header">Add Members to \'{group_name}\'</div>', unsafe_allow_html=True)
 
@@ -532,14 +532,12 @@ if st.session_state["step"] == "add_members":
 
 if st.session_state["step"] == "events":
     group_id = st.session_state["current_group"]
+    group_data = db.get_group(group_id)
+    group_name = group_data["name"] if group_data else "Group"
     members = db.get_group_members(group_id)
     display_map = build_display_map(members)
     member_emails = [m["email"] for m in members]
-    events = db.get_events(group_id)
-
-    # Get group name
-    groups = db.get_user_groups(user_email)
-    group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
+    events = db.get_events_with_totals(group_id)
 
     st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 1.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
@@ -549,11 +547,9 @@ if st.session_state["step"] == "events":
     # List existing events
     if events:
         for ev in events:
-            ev_expenses = db.get_expenses(ev["id"])
-            total = sum(e["amount"] for e in ev_expenses)
             _, col_center, _ = st.columns([1, 3, 1])
             with col_center:
-                if st.button(f"{ev['name']}  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True, type="primary"):
+                if st.button(f"{ev['name']}  ·  ${ev.get('total', 0):.2f}", key=f"ev_{ev['id']}", use_container_width=True, type="primary"):
                     st.session_state["current_event"] = ev["id"]
                     st.session_state["step"] = "expenses"
                     st.rerun()
@@ -586,7 +582,6 @@ if st.session_state["step"] == "events":
                     st.rerun()
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
-    group_data = next((g for g in groups if g["id"] == group_id), None)
     show_delete = group_data and can_delete_group(user_email, group_data)
     if show_delete:
         col_back, col_edit, col_delgrp = st.columns(3)
@@ -627,14 +622,12 @@ if st.session_state["step"] == "expenses":
         st.session_state["current_event"] = None
         st.rerun()
 
+    group_data = db.get_group(group_id)
+    group_name = group_data["name"] if group_data else "Group"
     members = db.get_group_members(group_id)
     display_map = build_display_map(members)
     member_emails = [m["email"] for m in members]
     expenses = db.get_expenses(event_id)
-
-    # Get group and event names
-    groups = db.get_user_groups(user_email)
-    group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
     events = db.get_events(group_id)
     event_name = next((ev["name"] for ev in events if ev["id"] == event_id), "Event")
 
