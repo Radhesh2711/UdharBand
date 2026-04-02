@@ -203,7 +203,9 @@ section[data-testid="stSidebar"] {
 }
 .share-person { color: #E8E8F0; font-weight: 500; }
 .share-amount { color: #a29bfe; font-weight: 600; text-align: right; }
-.share-owes { color: #fd79a8; font-weight: 500; text-align: right; }
+.share-status { font-weight: 500; text-align: right; }
+.share-status.owes { color: #fd79a8; }
+.share-status.paid { color: #00ce9e; }
 
 /* ── Edit / Delete buttons ── */
 .edit-btn + div button,
@@ -719,7 +721,7 @@ if st.session_state["step"] == "expenses":
                     share_html = ""
                     for person, share in exp["shares"].items():
                         owes = share if person != exp["paid_by"] else 0
-                        owes_tag = '<span class="share-owes">owes</span>' if owes > 0 else '<span style="color: #00ce9e;">paid</span>'
+                        owes_tag = '<span class="share-status owes">owes</span>' if owes > 0 else '<span class="share-status paid">paid</span>'
                         share_html += f"""
                         <div class="share-row">
                             <span class="share-person">{dn(person, display_map)}</span>
