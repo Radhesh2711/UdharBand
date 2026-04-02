@@ -219,22 +219,9 @@ button[data-testid="collapsedControl"] { display: none; }
 .edit-btn ~ div button:hover {
     background-color: #d4a017 !important;
 }
-/* X delete buttons */
-.del-x-btn button {
-    background-color: #c0392b !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-.del-x-btn button:hover {
-    background-color: #e74c3c !important;
+/* Vertically align columns */
+div[data-testid="stHorizontalBlock"] {
+    align-items: center;
 }
 
 
@@ -412,13 +399,9 @@ if st.session_state["step"] == "home":
                 st.session_state["step"] = "events"
                 st.rerun()
             if can_delete_group(user_email, g):
-                with col_del:
-                    st.markdown('<div class="del-x-btn">', unsafe_allow_html=True)
-                    del_clicked = st.button("X", key=f"del_{g['id']}")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    if del_clicked:
-                        db.delete_group(g["id"])
-                        st.rerun()
+                if col_del.button("X", key=f"del_{g['id']}"):
+                    db.delete_group(g["id"])
+                    st.rerun()
     else:
         st.markdown("""
         <div class="card" style="text-align: center; color: #8888aa;">
@@ -568,14 +551,10 @@ if st.session_state["step"] == "events":
                 st.session_state["step"] = "expenses"
                 st.rerun()
             if can_delete_event(user_email, ev):
-                with col_del:
-                    st.markdown('<div class="del-x-btn">', unsafe_allow_html=True)
-                    ev_del = st.button("X", key=f"del_ev_{ev['id']}")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    if ev_del:
-                        notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email, group_id)
-                        db.delete_event(ev["id"])
-                        st.rerun()
+                if col_del.button("X", key=f"del_ev_{ev['id']}"):
+                    notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email, group_id)
+                    db.delete_event(ev["id"])
+                    st.rerun()
     else:
         st.markdown("""
         <div class="card" style="text-align: center; color: #8888aa;">
