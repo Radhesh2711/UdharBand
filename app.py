@@ -202,11 +202,14 @@ button[data-testid="collapsedControl"] { display: none; }
     text-align: center;
 }
 /* ── Center radio buttons ── */
-.stRadio > div {
-    justify-content: center;
-}
-.stRadio > div[role="radiogroup"] {
-    justify-content: center;
+.stRadio > div,
+.stRadio > div > div,
+.stRadio div[role="radiogroup"],
+[data-testid="stRadio"] > div,
+[data-testid="stRadio"] div[role="radiogroup"] {
+    justify-content: center !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
 }
 
 .stNumberInput > div > div > input {
