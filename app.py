@@ -677,12 +677,21 @@ if st.session_state["step"] == "expenses":
     paid_by = member_emails[paid_idx]
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
-    involved = []
+    # Initialize all members as involved by default
+    if f"involved_{k}" not in st.session_state:
+        st.session_state[f"involved_{k}"] = set(range(len(member_emails)))
     inv_cols = st.columns(len(member_emails))
-    for i, email in enumerate(member_emails):
-        with inv_cols[i]:
-            if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
-                involved.append(email)
+    for idx, email in enumerate(member_emails):
+        with inv_cols[idx]:
+            is_in = idx in st.session_state[f"involved_{k}"]
+            btn_type = "primary" if is_in else "secondary"
+            if st.button(dn(email, display_map), key=f"inv_{k}_{idx}", use_container_width=True, type=btn_type):
+                if is_in:
+                    st.session_state[f"involved_{k}"].discard(idx)
+                else:
+                    st.session_state[f"involved_{k}"].add(idx)
+                st.rerun()
+    involved = [member_emails[idx] for idx in sorted(st.session_state[f"involved_{k}"])]
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
     _, col_pills, _ = st.columns([1, 3, 1])
