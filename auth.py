@@ -32,7 +32,8 @@ def require_login() -> str:
         st.stop()
 
     email = email.strip().lower()
-    db.ensure_user(email)
+    name = st.user.get("name")
+    db.ensure_user(email, name)
     return email
 
 
