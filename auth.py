@@ -48,7 +48,8 @@ def require_login() -> str:
 
     email = email.strip().lower()
     name = st.user.get("name")
-    db.ensure_user(email, name)
+    first_name = name.split()[0] if name else None
+    db.ensure_user(email, first_name)
     return email
 
 
