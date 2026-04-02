@@ -561,10 +561,9 @@ if st.session_state["step"] == "events":
 
     # Create new event
     st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2 = st.columns([3, 1])
-    with col1:
+    _, col_center, _ = st.columns([1, 3, 1])
+    with col_center:
         new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
-    with col2:
         if st.button("+ New Event", use_container_width=True, type="primary"):
             if not new_event.strip():
                 st.error("Enter an event name.")
