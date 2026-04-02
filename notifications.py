@@ -72,25 +72,28 @@ def notify_event_created(member_emails: list[str], group_name: str, event_name: 
     )
 
 
-def notify_expense_added(involved_emails: list[str], group_name: str, event_name: str,
+def notify_expense_added(shares: dict[str, float], group_name: str, event_name: str,
                          description: str, amount: float, paid_by_name: str, added_by: str):
     """Notify people included in an expense (except the one who added it)."""
-    recipients = [e for e in involved_emails if e != added_by]
-    _send_to_many(
-        recipients,
-        f"UdharBand: New expense in '{group_name} / {event_name}'",
-        f"""
-        <p>Hi!</p>
-        <p>A new expense was added in <strong>{group_name} / {event_name}</strong>:</p>
-        <ul>
-            <li><strong>Description:</strong> {description}</li>
-            <li><strong>Amount:</strong> ${amount:.2f}</li>
-            <li><strong>Paid by:</strong> {paid_by_name}</li>
-            <li><strong>Added by:</strong> {added_by}</li>
-        </ul>
-        <p>Open the app to view: <a href="https://udharband.streamlit.app">udharband.streamlit.app</a></p>
-        """,
-    )
+    for email, share in shares.items():
+        if email == added_by:
+            continue
+        _send_email(
+            email,
+            f"UdharBand: New expense in '{group_name} / {event_name}'",
+            f"""
+            <p>Hi!</p>
+            <p>A new expense was added in <strong>{group_name} / {event_name}</strong>:</p>
+            <ul>
+                <li><strong>Description:</strong> {description}</li>
+                <li><strong>Amount:</strong> ${amount:.2f}</li>
+                <li><strong>Paid by:</strong> {paid_by_name}</li>
+                <li><strong>Your share:</strong> ${share:.2f}</li>
+                <li><strong>Added by:</strong> {added_by}</li>
+            </ul>
+            <p>Open the app to view: <a href="https://udharband.streamlit.app">udharband.streamlit.app</a></p>
+            """,
+        )
 
 
 def notify_event_deleted(member_emails: list[str], group_name: str, event_name: str, deleted_by: str):

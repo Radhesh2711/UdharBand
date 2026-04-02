@@ -383,7 +383,7 @@ if st.session_state["step"] == "expenses":
             if diff != 0:
                 shares[involved[0]] = round(shares[involved[0]] + diff, 2)
             db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
-            notifications.notify_expense_added(list(shares.keys()), group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email)
+            notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email)
             st.session_state["exp_counter"] += 1
             st.rerun()
         elif split_type == "Percentage":
