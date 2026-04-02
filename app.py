@@ -954,7 +954,7 @@ if st.session_state["step"] == "expenses":
 
     if expenses:
         st.markdown("<br>", unsafe_allow_html=True)
-        _, col_simplify, _ = st.columns([2, 1, 2])
+        _, col_simplify, _ = st.columns([1.5, 1.5, 1.5])
         with col_simplify:
             if st.button("Simplify Expenses", type="primary", use_container_width=True):
                 st.session_state["show_simplified"] = True
@@ -982,9 +982,9 @@ if st.session_state["step"] == "expenses":
     current_event_data = next((ev for ev in events if ev["id"] == event_id), None)
     show_del_ev = current_event_data and can_delete_event(user_email, current_event_data)
     if show_del_ev:
-        _, col_back, col_del_ev, _ = st.columns([0.5, 2, 2, 0.5])
+        _, col_back, col_del_ev, _ = st.columns([1, 1.5, 1.5, 1])
     else:
-        _, col_back, _ = st.columns([1, 2, 1])
+        _, col_back, _ = st.columns([1.5, 1.5, 1.5])
     with col_back:
         if st.button("← Back to Events", use_container_width=True):
             st.session_state["current_event"] = None
