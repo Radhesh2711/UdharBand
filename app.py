@@ -470,6 +470,9 @@ if st.session_state["step"] == "home":
 # ═══════════════════════════════════════════════════════════════════════════════
 
 if st.session_state["step"] == "add_members":
+    if st.button("← Back"):
+        st.session_state["step"] = "events"
+        st.rerun()
     group_id = st.session_state["current_group"]
     members = db.get_group_members(group_id)
     display_map = build_display_map(members)
