@@ -220,11 +220,14 @@ button[data-testid="collapsedControl"] { display: none; }
 }
 
 /* ── Center expander labels ── */
-[data-testid="stExpander"] summary p,
-[data-testid="stExpander"] summary span,
-[data-testid="stExpander"] details summary {
-    text-align: center !important;
+[data-testid="stExpander"] summary {
     justify-content: center !important;
+}
+[data-testid="stExpander"] summary svg {
+    display: none !important;
+}
+[data-testid="stExpander"] summary p {
+    text-align: center !important;
 }
 
 /* ── Share table in expense detail ── */
