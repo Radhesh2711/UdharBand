@@ -10,7 +10,7 @@ import notifications
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 
-st.set_page_config(page_title="UdharBand", layout="centered", page_icon="💸", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="UdharBand", layout="centered", page_icon="💸")
 
 CUSTOM_CSS = """
 <style>
@@ -160,10 +160,9 @@ html, body {
     border-bottom: 2px solid rgba(108, 92, 231, 0.3);
 }
 
-/* ── Sidebar styling ── */
-section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0F0F1A 0%, #1A1A2E 100%);
-}
+/* ── Hide sidebar ── */
+section[data-testid="stSidebar"] { display: none; }
+button[data-testid="collapsedControl"] { display: none; }
 
 /* ── Button overrides ── */
 .stButton > button[kind="primary"] {
@@ -376,40 +375,62 @@ if "group" in qp and st.session_state.get("_deep_link_handled") != qp.get("group
     st.session_state["_deep_link_handled"] = qp.get("group", "") + qp.get("event", "")
     st.query_params.clear()
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
+# ── Navigation: back to groups (shown when inside a group) ────────────────────
 
-user_groups = db.get_user_groups(user_email)
-
-if user_groups:
-    st.sidebar.markdown("### Your Groups")
-    for g in user_groups:
-        col1, col2 = st.sidebar.columns([3, 1])
-        if col1.button(f"{g['name']}", key=f"load_{g['id']}", use_container_width=True):
-            st.session_state["current_group"] = g["id"]
-            st.session_state["current_event"] = None
-            st.session_state["step"] = "events"
-            st.rerun()
-        if can_delete_group(user_email, g):
-            if col2.button("X", key=f"del_{g['id']}"):
-                db.delete_group(g["id"])
-                if st.session_state.get("current_group") == g["id"]:
-                    st.session_state["step"] = "home"
-                    st.session_state["current_group"] = None
-                    st.session_state["current_event"] = None
-                st.rerun()
-    st.sidebar.divider()
-
-if st.sidebar.button("+ New Group", use_container_width=True):
-    st.session_state["step"] = "home"
-    st.session_state["current_group"] = None
-    st.session_state["current_event"] = None
-    st.rerun()
+if st.session_state["step"] not in ("home", "create_group"):
+    if st.button("← My Groups"):
+        st.session_state["step"] = "home"
+        st.session_state["current_group"] = None
+        st.session_state["current_event"] = None
+        st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# STEP 1: Create group
+# HOME: Group list
 # ═══════════════════════════════════════════════════════════════════════════════
 
 if st.session_state["step"] == "home":
+    user_groups = db.get_user_groups(user_email)
+
+    st.markdown('<div class="section-header">Your Groups</div>', unsafe_allow_html=True)
+
+    if user_groups:
+        for g in user_groups:
+            col_name, col_del = st.columns([4, 1])
+            with col_name:
+                n_events = len(db.get_events(g["id"]))
+                st.markdown(f"""
+                <div class="event-card">
+                    <div class="event-name">{g['name']}</div>
+                    <div class="event-meta">{n_events} events</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("Open", key=f"load_{g['id']}", use_container_width=True):
+                    st.session_state["current_group"] = g["id"]
+                    st.session_state["current_event"] = None
+                    st.session_state["step"] = "events"
+                    st.rerun()
+            if can_delete_group(user_email, g):
+                if col_del.button("X", key=f"del_{g['id']}"):
+                    db.delete_group(g["id"])
+                    st.rerun()
+    else:
+        st.markdown("""
+        <div class="card" style="text-align: center; color: #8888aa;">
+            No groups yet. Create one below!
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("+ Create New Group", type="primary", use_container_width=True):
+        st.session_state["step"] = "create_group"
+        st.rerun()
+    st.stop()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CREATE GROUP
+# ═══════════════════════════════════════════════════════════════════════════════
+
+if st.session_state["step"] == "create_group":
     st.markdown('<div class="section-header">Create a New Group</div>', unsafe_allow_html=True)
     name = st.text_input("Group name", placeholder="e.g. Goa Trip, Flatmates")
     if st.button("Next →", type="primary"):
