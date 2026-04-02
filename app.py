@@ -6,6 +6,7 @@ import streamlit as st
 import db
 from auth import require_login, build_display_map
 from permissions import can_delete_group, can_delete_event, can_delete_expense, can_edit_expense
+import notifications
 
 
 def build_owes_table(members, expenses):
@@ -197,6 +198,7 @@ if st.session_state["step"] == "add_members":
                 st.error(f"'{email}' is already a member.")
             else:
                 db.add_member(group_id, email, name if name else None)
+                notifications.notify_added_to_group(email, group_name, user_email)
                 st.session_state["member_counter"] += 1
                 st.rerun()
 
@@ -244,6 +246,7 @@ if st.session_state["step"] == "events":
                     st.error("Event already exists in this group.")
                 else:
                     ev = db.create_event(group_id, new_event.strip(), user_email)
+                    notifications.notify_event_created(member_emails, group_name, new_event.strip(), user_email)
                     st.session_state["current_event"] = ev["id"]
                     st.session_state["step"] = "expenses"
                     st.rerun()
@@ -263,6 +266,7 @@ if st.session_state["step"] == "events":
                 st.rerun()
             if can_delete_event(user_email, ev):
                 if col_del.button("X", key=f"del_ev_{ev['id']}"):
+                    notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email)
                     db.delete_event(ev["id"])
                     st.rerun()
     else:
@@ -379,6 +383,7 @@ if st.session_state["step"] == "expenses":
             if diff != 0:
                 shares[involved[0]] = round(shares[involved[0]] + diff, 2)
             db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+            notifications.notify_expense_added(list(shares.keys()), group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email)
             st.session_state["exp_counter"] += 1
             st.rerun()
         elif split_type == "Percentage":
@@ -442,6 +447,7 @@ if st.session_state["step"] == "expenses":
                             st.rerun()
                     if can_delete_expense(user_email, exp):
                         if btn_cols[1].button("Delete", key=f"del_{i}"):
+                            notifications.notify_expense_deleted(list(exp["shares"].keys()), group_name, event_name, exp["description"], exp["amount"], user_email)
                             db.delete_expense(exp["id"])
                             if editing_idx is not None and editing_idx >= i:
                                 st.session_state.pop("editing_expense", None)
@@ -543,6 +549,8 @@ if st.session_state["step"] == "expenses":
                                 st.error(error)
                             else:
                                 db.update_expense(exp["id"], ed_desc.strip(), ed_amount, ed_paid, shares)
+                                all_involved = set(list(shares.keys()) + list(exp["shares"].keys()))
+                                notifications.notify_expense_edited(list(all_involved), group_name, event_name, ed_desc.strip(), ed_amount, user_email)
                                 st.session_state.pop("editing_expense", None)
                                 st.rerun()
 
