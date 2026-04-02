@@ -395,20 +395,13 @@ if st.session_state["step"] == "home":
 
     if user_groups:
         for g in user_groups:
+            n_events = len(db.get_events(g["id"]))
             col_name, col_del = st.columns([4, 1])
-            with col_name:
-                n_events = len(db.get_events(g["id"]))
-                st.markdown(f"""
-                <div class="event-card">
-                    <div class="event-name">{g['name']}</div>
-                    <div class="event-meta">{n_events} events</div>
-                </div>
-                """, unsafe_allow_html=True)
-                if st.button("Open", key=f"load_{g['id']}", use_container_width=True):
-                    st.session_state["current_group"] = g["id"]
-                    st.session_state["current_event"] = None
-                    st.session_state["step"] = "events"
-                    st.rerun()
+            if col_name.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True):
+                st.session_state["current_group"] = g["id"]
+                st.session_state["current_event"] = None
+                st.session_state["step"] = "events"
+                st.rerun()
             if can_delete_group(user_email, g):
                 if col_del.button("X", key=f"del_{g['id']}"):
                     db.delete_group(g["id"])
@@ -557,17 +550,10 @@ if st.session_state["step"] == "events":
             ev_expenses = db.get_expenses(ev["id"])
             total = sum(e["amount"] for e in ev_expenses)
             col_name, col_del = st.columns([4, 1])
-            with col_name:
-                st.markdown(f"""
-                <div class="event-card">
-                    <div class="event-name">{ev['name']}</div>
-                    <div class="event-meta">{len(ev_expenses)} expenses &middot; Total: ${total:.2f}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                if st.button("Open", key=f"ev_{ev['id']}", use_container_width=True):
-                    st.session_state["current_event"] = ev["id"]
-                    st.session_state["step"] = "expenses"
-                    st.rerun()
+            if col_name.button(f"{ev['name']}  ·  {len(ev_expenses)} expenses  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True):
+                st.session_state["current_event"] = ev["id"]
+                st.session_state["step"] = "expenses"
+                st.rerun()
             if can_delete_event(user_email, ev):
                 if col_del.button("X", key=f"del_ev_{ev['id']}"):
                     notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email, group_id)
