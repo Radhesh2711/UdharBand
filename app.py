@@ -954,7 +954,7 @@ if st.session_state["step"] == "expenses":
 
     if expenses:
         st.markdown("<br>", unsafe_allow_html=True)
-        _, col_simplify, _ = st.columns([1, 2, 1])
+        _, col_simplify, _ = st.columns([2, 1, 2])
         with col_simplify:
             if st.button("Simplify Expenses", type="primary", use_container_width=True):
                 st.session_state["show_simplified"] = True
