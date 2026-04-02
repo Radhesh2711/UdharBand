@@ -316,7 +316,7 @@ if st.session_state["step"] == "expenses":
     k = st.session_state["exp_counter"]
 
     desc = st.text_input("Expense description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}")
-    amount = st.number_input("Amount", min_value=0.01, step=0.01, format="%.2f", key=f"exp_amount_{k}")
+    amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"exp_amount_{k}")
 
     st.write("**Who paid?**")
     display_names_list = [dn(e, display_map) for e in member_emails]
@@ -358,6 +358,18 @@ if st.session_state["step"] == "expenses":
     if st.button("Add Expense", type="primary"):
         if not desc.strip():
             st.error("Enter a description.")
+        elif not amount_str.strip():
+            st.error("Enter an amount.")
+        else:
+            try:
+                amount = round(float(amount_str.strip()), 2)
+                if amount <= 0:
+                    raise ValueError()
+            except ValueError:
+                amount = None
+                st.error("Enter a valid positive number for amount.")
+        if not desc.strip() or not amount_str.strip() or amount is None:
+            pass
         elif not involved:
             st.error("Select at least one person involved.")
         elif split_type == "Equal":
