@@ -325,11 +325,23 @@ def dn(email, display_map):
     return display_map.get(email, email.split("@")[0])
 
 
+CHIP_COLORS = [
+    ("#6C5CE7", "rgba(108, 92, 231, 0.15)"),   # purple
+    ("#00cec9", "rgba(0, 206, 201, 0.15)"),     # teal
+    ("#fd79a8", "rgba(253, 121, 168, 0.15)"),   # pink
+    ("#fdcb6e", "rgba(253, 203, 110, 0.15)"),   # yellow
+    ("#55efc4", "rgba(85, 239, 196, 0.15)"),    # green
+    ("#74b9ff", "rgba(116, 185, 255, 0.15)"),   # blue
+    ("#e17055", "rgba(225, 112, 85, 0.15)"),    # orange
+    ("#dfe6e9", "rgba(223, 230, 233, 0.15)"),   # grey
+]
+
 def render_member_chips(emails, display_map):
-    """Render members as styled chips."""
-    chips = "".join(
-        f'<span class="member-chip">{dn(e, display_map)}</span>' for e in emails
-    )
+    """Render members as styled chips with different colors."""
+    chips = ""
+    for i, e in enumerate(emails):
+        color, bg = CHIP_COLORS[i % len(CHIP_COLORS)]
+        chips += f'<span style="display:inline-block;border:1px solid {color};background:{bg};border-radius:20px;padding:0.3rem 0.8rem;margin:0.2rem 0.3rem;font-size:0.85rem;color:{color};font-weight:500;">{dn(e, display_map)}</span>'
     st.markdown(f'<div style="text-align: center;">{chips}</div>', unsafe_allow_html=True)
 
 
@@ -533,7 +545,7 @@ if st.session_state["step"] == "events":
     groups = db.get_user_groups(user_email)
     group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
 
-    st.markdown(f'<div style="text-align: center; font-size: 1.3rem; font-weight: 600; color: #E8E8F0; margin: 1.5rem 0 0.5rem 0;">{group_name}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; font-size: 1.3rem; font-weight: 600; color: #E8E8F0; margin: 1.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
     st.markdown('<div style="text-align: center; font-size: 1.1rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Events</div>', unsafe_allow_html=True)
