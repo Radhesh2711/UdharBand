@@ -221,43 +221,6 @@ button[data-testid="collapsedControl"] { display: none; }
 .share-status.owes { color: #fd79a8; }
 .share-status.paid { color: #00ce9e; }
 
-/* ── Styled buttons via marker + sibling selector ── */
-.blue-btn-marker + div button,
-.blue-btn-marker ~ div button {
-    background-color: #2d7dd2 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-}
-.blue-btn-marker + div button:hover,
-.blue-btn-marker ~ div button:hover {
-    background-color: #3d8fe4 !important;
-}
-.red-btn-marker + div button,
-.red-btn-marker ~ div button {
-    background-color: #c0392b !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-}
-.red-btn-marker + div button:hover,
-.red-btn-marker ~ div button:hover {
-    background-color: #e74c3c !important;
-}
-.yellow-btn-marker + div button,
-.yellow-btn-marker ~ div button {
-    background-color: #b8860b !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-}
-.yellow-btn-marker + div button:hover,
-.yellow-btn-marker ~ div button:hover {
-    background-color: #d4a017 !important;
-}
 /* Vertically align columns */
 div[data-testid="stHorizontalBlock"] {
     align-items: center;
@@ -369,13 +332,6 @@ def render_member_chips(emails, display_map):
     st.markdown(f'<div style="text-align: center;">{chips}</div>', unsafe_allow_html=True)
 
 
-def styled_button(label, key, color_class, container=None, use_container_width=True):
-    """Render a button with color styling using a CSS marker + sibling selector."""
-    target = container or st
-    # Inject a marker div; the next sibling (the button's container) gets styled
-    target.markdown(f'<div class="{color_class}-marker" style="display:none;"></div>', unsafe_allow_html=True)
-    clicked = target.button(label, key=key, use_container_width=use_container_width)
-    return clicked
 
 
 def render_settlement_card(debtor_name, creditor_name, amount):
@@ -635,12 +591,12 @@ if st.session_state["step"] == "events":
             st.session_state["current_event"] = None
             st.rerun()
     with col_edit:
-        if styled_button("Edit Members", "edit_members", "blue-btn"):
+        if st.button("Edit Members", key="edit_members", use_container_width=True, type="primary"):
             st.session_state["step"] = "add_members"
             st.rerun()
     if show_delete:
         with col_delgrp:
-            if styled_button("Delete Group", "del_group", "red-btn"):
+            if st.button("Delete Group", key="del_group", use_container_width=True, icon=":material/delete:"):
                 db.delete_group(group_id)
                 st.session_state["step"] = "home"
                 st.session_state["current_group"] = None
@@ -687,7 +643,7 @@ if st.session_state["step"] == "expenses":
     with col_del_ev:
         current_event_data = next((ev for ev in events if ev["id"] == event_id), None)
         if current_event_data and can_delete_event(user_email, current_event_data):
-            if styled_button("Delete Event", "del_event", "red-btn"):
+            if st.button("Delete Event", key="del_event", use_container_width=True, icon=":material/delete:"):
                 notifications.notify_event_deleted(member_emails, group_name, event_name, user_email, group_id)
                 db.delete_event(event_id)
                 st.session_state["current_event"] = None
@@ -828,12 +784,12 @@ if st.session_state["step"] == "expenses":
                     btn_cols = st.columns([1, 1, 3])
                     if can_edit_expense(user_email, exp):
                         with btn_cols[0]:
-                            if styled_button("Edit", f"edit_{i}", "yellow-btn"):
+                            if st.button("Edit", key=f"edit_{i}", use_container_width=True, icon=":material/edit:"):
                                 st.session_state["editing_expense"] = i
                                 st.rerun()
                     if can_delete_expense(user_email, exp):
                         with btn_cols[1]:
-                            del_clicked = styled_button("Delete", f"del_{i}", "red-btn")
+                            del_clicked = st.button("Delete", key=f"del_{i}", use_container_width=True, icon=":material/delete:")
                             if del_clicked:
                                 notifications.notify_expense_deleted(list(exp["shares"].keys()), group_name, event_name, exp["description"], exp["amount"], user_email, group_id, event_id)
                                 db.delete_expense(exp["id"])
