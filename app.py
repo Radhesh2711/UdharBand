@@ -1,48 +1,11 @@
-import json
 from collections import defaultdict
-from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-DATA_FILE = Path(__file__).parent / "groups.json"
-
-# Data shape:
-# {
-#   "Group Name": {
-#     "members": ["A", "B", "C"],
-#     "events": {
-#       "Event Name": [
-#         {"description": "...", "amount": 100, "paid_by": "A", "shares": {"B": 50, "C": 50}}
-#       ]
-#     }
-#   }
-# }
-
-
-def load_data():
-    if DATA_FILE.exists():
-        return json.loads(DATA_FILE.read_text())
-    return {}
-
-
-def save_data(data):
-    DATA_FILE.write_text(json.dumps(data, indent=2))
-
-
-def migrate_group(grp):
-    """Migrate old formats to new {members, events} shape."""
-    if isinstance(grp, list):
-        return {"members": grp, "events": {}}
-    if "expenses" in grp and "events" not in grp:
-        # Old format: flat expenses list -> put them under a "Default" event
-        events = {}
-        if grp["expenses"]:
-            events["Default"] = grp["expenses"]
-        return {"members": grp.get("members", []), "events": events}
-    grp.setdefault("members", [])
-    grp.setdefault("events", {})
-    return grp
+import db
+from auth import require_login, build_display_map
+from permissions import can_delete_group, can_delete_event, can_delete_expense, can_edit_expense
 
 
 def build_owes_table(members, expenses):
@@ -116,46 +79,46 @@ def init_state(key, value):
         st.session_state[key] = value
 
 
+def dn(email, display_map):
+    """Short helper: display name for an email."""
+    return display_map.get(email, email.split("@")[0])
+
+
 # ── App ───────────────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="UdharBand", layout="centered")
+
+user_email = require_login()
+
 st.title("UdharBand")
-
-data = load_data()
-
-# Migrate all groups on load
-for g in list(data.keys()):
-    data[g] = migrate_group(data[g])
-save_data(data)
+st.caption(f"Logged in as **{user_email}**")
 
 # Steps: home | add_members | events | expenses
 init_state("step", "home")
-init_state("current_group", None)
-init_state("current_event", None)
+init_state("current_group", None)   # group UUID
+init_state("current_event", None)   # event UUID
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
-existing_groups = list(data.keys())
-if existing_groups:
-    st.sidebar.header("Existing Groups")
-    for g in existing_groups:
-        grp = data[g]
-        n_members = len(grp["members"])
-        n_events = len(grp["events"])
+user_groups = db.get_user_groups(user_email)
+
+if user_groups:
+    st.sidebar.header("Your Groups")
+    for g in user_groups:
         col1, col2 = st.sidebar.columns([3, 1])
-        if col1.button(f"{g}  ({n_members} members, {n_events} events)", key=f"load_{g}", use_container_width=True):
-            st.session_state["current_group"] = g
+        if col1.button(f"{g['name']}", key=f"load_{g['id']}", use_container_width=True):
+            st.session_state["current_group"] = g["id"]
             st.session_state["current_event"] = None
             st.session_state["step"] = "events"
             st.rerun()
-        if col2.button("X", key=f"del_{g}"):
-            del data[g]
-            save_data(data)
-            if st.session_state.get("current_group") == g:
-                st.session_state["step"] = "home"
-                st.session_state["current_group"] = None
-                st.session_state["current_event"] = None
-            st.rerun()
+        if can_delete_group(user_email, g):
+            if col2.button("X", key=f"del_{g['id']}"):
+                db.delete_group(g["id"])
+                if st.session_state.get("current_group") == g["id"]:
+                    st.session_state["step"] = "home"
+                    st.session_state["current_group"] = None
+                    st.session_state["current_event"] = None
+                st.rerun()
     st.sidebar.divider()
 
 if st.sidebar.button("+ New Group"):
@@ -174,13 +137,9 @@ if st.session_state["step"] == "home":
     if st.button("Next →"):
         if not name.strip():
             st.error("Please enter a group name.")
-        elif name.strip() in data:
-            st.error("A group with this name already exists.")
         else:
-            gname = name.strip()
-            data[gname] = {"members": [], "events": {}}
-            save_data(data)
-            st.session_state["current_group"] = gname
+            group = db.create_group(name.strip(), user_email)
+            st.session_state["current_group"] = group["id"]
             st.session_state["step"] = "add_members"
             st.rerun()
     st.stop()
@@ -190,34 +149,42 @@ if st.session_state["step"] == "home":
 # ═══════════════════════════════════════════════════════════════════════════════
 
 if st.session_state["step"] == "add_members":
-    gname = st.session_state["current_group"]
-    group = data[gname]
-    members = group["members"]
+    group_id = st.session_state["current_group"]
+    members = db.get_group_members(group_id)
+    display_map = build_display_map(members)
+    member_emails = [m["email"] for m in members]
 
-    st.header(f"Add Members to '{gname}'")
+    # Get group name for header
+    groups = db.get_user_groups(user_email)
+    group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
+
+    st.header(f"Add Members to '{group_name}'")
 
     if members:
         st.write("**Current members:**")
         for i, m in enumerate(members):
             c1, c2 = st.columns([5, 1])
-            c1.write(f"{i+1}. {m}")
-            if c2.button("Remove", key=f"rm_{i}"):
-                members.pop(i)
-                save_data(data)
-                st.rerun()
+            c1.write(f"{i+1}. {m['display_name']} ({m['email']})")
+            # Don't allow removing yourself if you're the only member
+            if m["email"] != user_email or len(members) > 1:
+                if c2.button("Remove", key=f"rm_{m['email']}"):
+                    db.remove_member(group_id, m["email"])
+                    st.rerun()
 
-    new_name = st.text_input("Member name", placeholder="Enter a name", key="member_input")
+    new_email = st.text_input("Member email", placeholder="Enter their email address", key="member_input")
     col_add, col_done = st.columns(2)
 
     with col_add:
         if st.button("Add Member", use_container_width=True):
-            if not new_name.strip():
-                st.error("Enter a name.")
-            elif new_name.strip() in members:
-                st.error(f"'{new_name.strip()}' is already added.")
+            email = new_email.strip().lower()
+            if not email:
+                st.error("Enter an email.")
+            elif "@" not in email:
+                st.error("Please enter a valid email address.")
+            elif email in member_emails:
+                st.error(f"'{email}' is already a member.")
             else:
-                members.append(new_name.strip())
-                save_data(data)
+                db.add_member(group_id, email)
                 st.rerun()
 
     with col_done:
@@ -235,13 +202,18 @@ if st.session_state["step"] == "add_members":
 # ═══════════════════════════════════════════════════════════════════════════════
 
 if st.session_state["step"] == "events":
-    gname = st.session_state["current_group"]
-    group = data[gname]
-    members = group["members"]
-    events = group["events"]
+    group_id = st.session_state["current_group"]
+    members = db.get_group_members(group_id)
+    display_map = build_display_map(members)
+    member_emails = [m["email"] for m in members]
+    events = db.get_events(group_id)
 
-    st.header(f"{gname}")
-    st.caption(f"Members: {', '.join(members)}")
+    # Get group name
+    groups = db.get_user_groups(user_email)
+    group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
+
+    st.header(f"{group_name}")
+    st.caption(f"Members: {', '.join(dn(e, display_map) for e in member_emails)}")
 
     st.subheader("Events")
 
@@ -253,32 +225,33 @@ if st.session_state["step"] == "events":
         if st.button("Add Event", use_container_width=True):
             if not new_event.strip():
                 st.error("Enter an event name.")
-            elif new_event.strip() in events:
-                st.error("Event already exists in this group.")
             else:
-                events[new_event.strip()] = []
-                save_data(data)
-                st.session_state["current_event"] = new_event.strip()
-                st.session_state["step"] = "expenses"
-                st.rerun()
+                event_names = [ev["name"] for ev in events]
+                if new_event.strip() in event_names:
+                    st.error("Event already exists in this group.")
+                else:
+                    ev = db.create_event(group_id, new_event.strip(), user_email)
+                    st.session_state["current_event"] = ev["id"]
+                    st.session_state["step"] = "expenses"
+                    st.rerun()
 
     # List existing events
     if events:
-        for ev_name in events:
-            exps = events[ev_name]
-            total = sum(e["amount"] for e in exps)
+        for ev in events:
+            ev_expenses = db.get_expenses(ev["id"])
+            total = sum(e["amount"] for e in ev_expenses)
             col_name, col_del = st.columns([4, 1])
             if col_name.button(
-                f"{ev_name}  —  {len(exps)} expenses, total: ${total:.2f}",
-                key=f"ev_{ev_name}", use_container_width=True
+                f"{ev['name']}  —  {len(ev_expenses)} expenses, total: ${total:.2f}",
+                key=f"ev_{ev['id']}", use_container_width=True
             ):
-                st.session_state["current_event"] = ev_name
+                st.session_state["current_event"] = ev["id"]
                 st.session_state["step"] = "expenses"
                 st.rerun()
-            if col_del.button("X", key=f"del_ev_{ev_name}"):
-                del events[ev_name]
-                save_data(data)
-                st.rerun()
+            if can_delete_event(user_email, ev):
+                if col_del.button("X", key=f"del_ev_{ev['id']}"):
+                    db.delete_event(ev["id"])
+                    st.rerun()
     else:
         st.info("No events yet. Create one above.")
 
@@ -294,21 +267,27 @@ if st.session_state["step"] == "events":
 # ═══════════════════════════════════════════════════════════════════════════════
 
 if st.session_state["step"] == "expenses":
-    gname = st.session_state["current_group"]
-    ev_name = st.session_state["current_event"]
+    group_id = st.session_state["current_group"]
+    event_id = st.session_state["current_event"]
 
-    # Guard: if event is missing or None, go back to events list
-    if not ev_name or ev_name not in data.get(gname, {}).get("events", {}):
+    if not event_id:
         st.session_state["step"] = "events"
         st.session_state["current_event"] = None
         st.rerun()
 
-    group = data[gname]
-    members = group["members"]
-    expenses = group["events"][ev_name]
+    members = db.get_group_members(group_id)
+    display_map = build_display_map(members)
+    member_emails = [m["email"] for m in members]
+    expenses = db.get_expenses(event_id)
 
-    st.header(f"{gname} / {ev_name}")
-    st.caption(f"Members: {', '.join(members)}")
+    # Get group and event names
+    groups = db.get_user_groups(user_email)
+    group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
+    events = db.get_events(group_id)
+    event_name = next((ev["name"] for ev in events if ev["id"] == event_id), "Event")
+
+    st.header(f"{group_name} / {event_name}")
+    st.caption(f"Members: {', '.join(dn(e, display_map) for e in member_emails)}")
 
     if st.button("← Back to Events"):
         st.session_state["current_event"] = None
@@ -319,7 +298,12 @@ if st.session_state["step"] == "expenses":
 
     if expenses:
         st.subheader("Who Owes Who")
-        owes_df = build_owes_table(members, expenses)
+        # Build table with display names
+        owes_df = build_owes_table(member_emails, expenses)
+        # Rename index and columns to display names
+        rename = {e: dn(e, display_map) for e in member_emails}
+        owes_df.index = [rename.get(idx, idx) for idx in owes_df.index]
+        owes_df.columns = [rename.get(c, c) for c in owes_df.columns]
         st.markdown("*Rows owe to columns*")
         st.dataframe(owes_df, use_container_width=True)
         st.divider()
@@ -336,15 +320,19 @@ if st.session_state["step"] == "expenses":
     amount = st.number_input("Amount", min_value=0.01, step=0.01, format="%.2f", key=f"exp_amount_{k}")
 
     st.write("**Who paid?**")
-    paid_by = st.radio("Paid by", members, horizontal=True, label_visibility="collapsed", key=f"exp_paid_{k}")
+    display_names_list = [dn(e, display_map) for e in member_emails]
+    paid_idx = st.radio("Paid by", range(len(member_emails)),
+                        format_func=lambda i: display_names_list[i],
+                        horizontal=True, label_visibility="collapsed", key=f"exp_paid_{k}")
+    paid_by = member_emails[paid_idx]
 
     st.write("**Who is part of this expense?**")
     involved = []
-    inv_cols = st.columns(min(len(members), 4))
-    for i, m in enumerate(members):
-        with inv_cols[i % min(len(members), 4)]:
-            if st.checkbox(m, value=True, key=f"inv_{k}_{m}"):
-                involved.append(m)
+    inv_cols = st.columns(min(len(member_emails), 4))
+    for i, email in enumerate(member_emails):
+        with inv_cols[i % min(len(member_emails), 4)]:
+            if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
+                involved.append(email)
 
     split_type = st.radio("How to split?", ["Equal", "Percentage", "Ratio"], horizontal=True, key=f"exp_split_{k}")
 
@@ -352,20 +340,20 @@ if st.session_state["step"] == "expenses":
     if split_type == "Percentage" and involved:
         st.caption("Enter percentage for each involved member (must total 100%):")
         pcols = st.columns(min(len(involved), 4))
-        for i, m in enumerate(involved):
+        for i, email in enumerate(involved):
             with pcols[i % min(len(involved), 4)]:
-                split_inputs[m] = st.number_input(
-                    m, min_value=0.0, max_value=100.0, step=0.01,
-                    format="%.2f", key=f"pct_{k}_{m}"
+                split_inputs[email] = st.number_input(
+                    dn(email, display_map), min_value=0.0, max_value=100.0, step=0.01,
+                    format="%.2f", key=f"pct_{k}_{email}"
                 )
     elif split_type == "Ratio" and involved:
         st.caption("Enter ratio for each involved member:")
         rcols = st.columns(min(len(involved), 4))
-        for i, m in enumerate(involved):
+        for i, email in enumerate(involved):
             with rcols[i % min(len(involved), 4)]:
-                split_inputs[m] = st.number_input(
-                    m, min_value=0.0, step=0.1,
-                    format="%.1f", key=f"rat_{k}_{m}"
+                split_inputs[email] = st.number_input(
+                    dn(email, display_map), min_value=0.0, step=0.1,
+                    format="%.1f", key=f"rat_{k}_{email}"
                 )
 
     if st.button("Add Expense", type="primary"):
@@ -379,11 +367,7 @@ if st.session_state["step"] == "expenses":
             diff = round(amount - sum(shares.values()), 2)
             if diff != 0:
                 shares[involved[0]] = round(shares[involved[0]] + diff, 2)
-            expenses.append({
-                "description": desc.strip(), "amount": amount,
-                "paid_by": paid_by, "shares": shares,
-            })
-            save_data(data)
+            db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
             st.session_state["exp_counter"] += 1
             st.rerun()
         elif split_type == "Percentage":
@@ -397,11 +381,7 @@ if st.session_state["step"] == "expenses":
                 if diff != 0 and shares:
                     first = next(iter(shares))
                     shares[first] = round(shares[first] + diff, 2)
-                expenses.append({
-                    "description": desc.strip(), "amount": amount,
-                    "paid_by": paid_by, "shares": shares,
-                })
-                save_data(data)
+                db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
                 st.session_state["exp_counter"] += 1
                 st.rerun()
         elif split_type == "Ratio":
@@ -415,11 +395,7 @@ if st.session_state["step"] == "expenses":
                 if diff != 0 and shares:
                     first = next(iter(shares))
                     shares[first] = round(shares[first] + diff, 2)
-                expenses.append({
-                    "description": desc.strip(), "amount": amount,
-                    "paid_by": paid_by, "shares": shares,
-                })
-                save_data(data)
+                db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
                 st.session_state["exp_counter"] += 1
                 st.rerun()
 
@@ -434,7 +410,7 @@ if st.session_state["step"] == "expenses":
             is_editing = editing_idx == i
 
             with st.expander(
-                f"**{exp['description']}** — {exp['amount']:.2f} (paid by {exp['paid_by']})",
+                f"**{exp['description']}** — {exp['amount']:.2f} (paid by {dn(exp['paid_by'], display_map)})",
                 expanded=is_editing,
             ):
                 if not is_editing:
@@ -442,21 +418,23 @@ if st.session_state["step"] == "expenses":
                     for person, share in exp["shares"].items():
                         owes_to_payer = share if person != exp["paid_by"] else 0
                         split_data.append({
-                            "Person": person,
+                            "Person": dn(person, display_map),
                             "Share": f"{share:.2f}",
-                            "Owes to " + exp["paid_by"]: f"{owes_to_payer:.2f}" if owes_to_payer > 0 else "-",
+                            "Owes to " + dn(exp["paid_by"], display_map): f"{owes_to_payer:.2f}" if owes_to_payer > 0 else "-",
                         })
                     st.table(pd.DataFrame(split_data).set_index("Person"))
-                    btn_edit, btn_del, _ = st.columns([1, 1, 3])
-                    if btn_edit.button("Edit", key=f"edit_{i}"):
-                        st.session_state["editing_expense"] = i
-                        st.rerun()
-                    if btn_del.button("Delete", key=f"del_{i}"):
-                        expenses.pop(i)
-                        save_data(data)
-                        if editing_idx is not None and editing_idx >= i:
-                            st.session_state.pop("editing_expense", None)
-                        st.rerun()
+
+                    btn_cols = st.columns([1, 1, 3])
+                    if can_edit_expense(user_email, exp):
+                        if btn_cols[0].button("Edit", key=f"edit_{i}"):
+                            st.session_state["editing_expense"] = i
+                            st.rerun()
+                    if can_delete_expense(user_email, exp):
+                        if btn_cols[1].button("Delete", key=f"del_{i}"):
+                            db.delete_expense(exp["id"])
+                            if editing_idx is not None and editing_idx >= i:
+                                st.session_state.pop("editing_expense", None)
+                            st.rerun()
                 else:
                     ed_desc = st.text_input(
                         "Description", value=exp["description"], key=f"ed_desc_{i}"
@@ -467,20 +445,24 @@ if st.session_state["step"] == "expenses":
                     )
 
                     st.write("**Who paid?**")
-                    paid_idx = members.index(exp["paid_by"]) if exp["paid_by"] in members else 0
-                    ed_paid = st.radio(
-                        "Paid by", members, index=paid_idx, horizontal=True,
+                    paid_idx_edit = member_emails.index(exp["paid_by"]) if exp["paid_by"] in member_emails else 0
+                    ed_paid_idx = st.radio(
+                        "Paid by", range(len(member_emails)),
+                        index=paid_idx_edit,
+                        format_func=lambda idx: display_names_list[idx],
+                        horizontal=True,
                         label_visibility="collapsed", key=f"ed_paid_{i}"
                     )
+                    ed_paid = member_emails[ed_paid_idx]
 
                     st.write("**Who is part of this expense?**")
                     ed_involved = []
-                    ed_inv_cols = st.columns(min(len(members), 4))
-                    for mi, m in enumerate(members):
-                        with ed_inv_cols[mi % min(len(members), 4)]:
-                            checked = m in exp["shares"]
-                            if st.checkbox(m, value=checked, key=f"ed_inv_{i}_{m}"):
-                                ed_involved.append(m)
+                    ed_inv_cols = st.columns(min(len(member_emails), 4))
+                    for mi, email in enumerate(member_emails):
+                        with ed_inv_cols[mi % min(len(member_emails), 4)]:
+                            checked = email in exp["shares"]
+                            if st.checkbox(dn(email, display_map), value=checked, key=f"ed_inv_{i}_{email}"):
+                                ed_involved.append(email)
 
                     ed_split = st.radio(
                         "How to split?", ["Equal", "Percentage", "Ratio"],
@@ -491,20 +473,20 @@ if st.session_state["step"] == "expenses":
                     if ed_split == "Percentage" and ed_involved:
                         st.caption("Enter percentage for each involved member (must total 100%):")
                         epcols = st.columns(min(len(ed_involved), 4))
-                        for mi, m in enumerate(ed_involved):
+                        for mi, email in enumerate(ed_involved):
                             with epcols[mi % min(len(ed_involved), 4)]:
-                                ed_split_inputs[m] = st.number_input(
-                                    m, min_value=0.0, max_value=100.0, step=0.01,
-                                    format="%.2f", key=f"ed_pct_{i}_{m}"
+                                ed_split_inputs[email] = st.number_input(
+                                    dn(email, display_map), min_value=0.0, max_value=100.0, step=0.01,
+                                    format="%.2f", key=f"ed_pct_{i}_{email}"
                                 )
                     elif ed_split == "Ratio" and ed_involved:
                         st.caption("Enter ratio for each involved member:")
                         ercols = st.columns(min(len(ed_involved), 4))
-                        for mi, m in enumerate(ed_involved):
+                        for mi, email in enumerate(ed_involved):
                             with ercols[mi % min(len(ed_involved), 4)]:
-                                ed_split_inputs[m] = st.number_input(
-                                    m, min_value=0.0, step=0.1,
-                                    format="%.1f", key=f"ed_rat_{i}_{m}"
+                                ed_split_inputs[email] = st.number_input(
+                                    dn(email, display_map), min_value=0.0, step=0.1,
+                                    format="%.1f", key=f"ed_rat_{i}_{email}"
                                 )
 
                     btn_save, btn_cancel, _ = st.columns([1, 1, 3])
@@ -549,13 +531,7 @@ if st.session_state["step"] == "expenses":
                             if error:
                                 st.error(error)
                             else:
-                                expenses[i] = {
-                                    "description": ed_desc.strip(),
-                                    "amount": ed_amount,
-                                    "paid_by": ed_paid,
-                                    "shares": shares,
-                                }
-                                save_data(data)
+                                db.update_expense(exp["id"], ed_desc.strip(), ed_amount, ed_paid, shares)
                                 st.session_state.pop("editing_expense", None)
                                 st.rerun()
 
@@ -572,10 +548,12 @@ if st.session_state["step"] == "expenses":
             st.session_state["show_simplified"] = True
 
         if st.session_state.get("show_simplified"):
-            settlements = simplify_debts(members, expenses)
+            settlements = simplify_debts(member_emails, expenses)
             st.subheader("Simplified Settlements")
             if settlements:
                 for debtor, creditor, amt in settlements:
-                    st.markdown(f"**{debtor}** owes **{creditor}** **${amt:.2f}**")
+                    st.markdown(
+                        f"**{dn(debtor, display_map)}** owes **{dn(creditor, display_map)}** **${amt:.2f}**"
+                    )
             else:
                 st.success("All settled up! No one owes anything.")
