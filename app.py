@@ -219,17 +219,6 @@ button[data-testid="collapsedControl"] { display: none; }
     border-radius: 12px;
 }
 
-/* ── Center expander labels ── */
-[data-testid="stExpander"] summary {
-    justify-content: center !important;
-}
-[data-testid="stExpander"] summary svg {
-    display: none !important;
-}
-[data-testid="stExpander"] summary p {
-    text-align: center !important;
-}
-
 /* ── Share table in expense detail ── */
 .share-row {
     display: grid;
@@ -814,7 +803,17 @@ if st.session_state["step"] == "expenses":
             is_editing = editing_idx == i
 
             label = f"{exp['description']} — ${exp['amount']:.2f} · paid by {dn(exp['paid_by'], display_map)}"
-            with st.expander(label, expanded=is_editing):
+            _, col_exp, _ = st.columns([0.5, 4, 0.5])
+            with col_exp:
+                if st.button(label, key=f"exp_toggle_{i}", use_container_width=True):
+                    if st.session_state.get("expanded_expense") == i:
+                        st.session_state["expanded_expense"] = None
+                    else:
+                        st.session_state["expanded_expense"] = i
+                    st.rerun()
+
+            is_expanded = st.session_state.get("expanded_expense") == i or is_editing
+            if is_expanded:
                 if not is_editing:
                     share_html = ""
                     for person, share in exp["shares"].items():
