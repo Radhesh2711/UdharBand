@@ -164,6 +164,21 @@ html, body {
 section[data-testid="stSidebar"] { display: none; }
 button[data-testid="collapsedControl"] { display: none; }
 
+/* ── Footer ── */
+.app-footer {
+    position: fixed;
+    bottom: 1rem;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 100;
+    pointer-events: none;
+}
+.footer-email {
+    color: #8888aa;
+    font-size: 0.8rem;
+}
+
 /* ── Button overrides ── */
 .stButton > button[kind="primary"] {
     border-radius: 12px;
@@ -346,10 +361,23 @@ def render_expense_card(description, amount, paid_by_name):
 user_email = require_login()
 
 st.markdown('<div class="page-title" style="text-align: center; margin-bottom: 1.5rem;">UdharBand</div>', unsafe_allow_html=True)
-col_user, col_logout = st.columns([4, 1])
-col_user.markdown(f'<div class="page-subtitle">Logged in as {user_email}</div>', unsafe_allow_html=True)
-if col_logout.button("Logout", type="secondary"):
-    st.logout()
+
+# Footer: logged-in status + logout (rendered at bottom via CSS)
+footer_html = f"""
+<div class="app-footer">
+    <span class="footer-email">Logged in as {user_email}</span>
+</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
+
+# Logout button in a hidden-ish bottom area — we'll render it at the very end
+# Store reference so we can render logout at bottom of each page
+def render_logout():
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    _, col_logout, _ = st.columns([2, 1, 2])
+    with col_logout:
+        if st.button("Logout", type="secondary", use_container_width=True):
+            st.logout()
 
 # Steps: home | add_members | events | expenses
 init_state("step", "home")
@@ -409,6 +437,7 @@ if st.session_state["step"] == "home":
         if st.button("+ Create New Group", type="primary", use_container_width=True):
             st.session_state["step"] = "create_group"
             st.rerun()
+    render_logout()
     st.stop()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -426,6 +455,7 @@ if st.session_state["step"] == "create_group":
             st.session_state["current_group"] = group["id"]
             st.session_state["step"] = "add_members"
             st.rerun()
+    render_logout()
     st.stop()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -494,6 +524,7 @@ if st.session_state["step"] == "add_members":
                 st.session_state["step"] = "events"
                 st.rerun()
 
+    render_logout()
     st.stop()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -574,6 +605,7 @@ if st.session_state["step"] == "events":
                 st.session_state["current_event"] = None
                 st.rerun()
 
+    render_logout()
     st.stop()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -892,3 +924,5 @@ if st.session_state["step"] == "expenses":
                     All settled up! No one owes anything.
                 </div>
                 """, unsafe_allow_html=True)
+
+    render_logout()
