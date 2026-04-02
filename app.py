@@ -661,21 +661,28 @@ if st.session_state["step"] == "expenses":
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
     display_names_list = [dn(e, display_map) for e in member_emails]
-    _, col_paid, _ = st.columns([1, 3, 1])
-    with col_paid:
-        paid_name = st.pills("Paid by", display_names_list, default=display_names_list[0], label_visibility="collapsed", key=f"exp_paid_{k}")
-    paid_idx = display_names_list.index(paid_name) if paid_name in display_names_list else 0
+    # Colored member chips for paid_by
+    if f"paid_by_{k}" not in st.session_state:
+        st.session_state[f"paid_by_{k}"] = 0
+    paid_cols = st.columns(len(member_emails))
+    for idx, email in enumerate(member_emails):
+        color, bg = CHIP_COLORS[idx % len(CHIP_COLORS)]
+        with paid_cols[idx]:
+            is_selected = st.session_state[f"paid_by_{k}"] == idx
+            btn_type = "primary" if is_selected else "secondary"
+            if st.button(dn(email, display_map), key=f"paid_sel_{k}_{idx}", use_container_width=True, type=btn_type):
+                st.session_state[f"paid_by_{k}"] = idx
+                st.rerun()
+    paid_idx = st.session_state[f"paid_by_{k}"]
     paid_by = member_emails[paid_idx]
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
     involved = []
-    _, col_checks, _ = st.columns([0.5, 4, 0.5])
-    with col_checks:
-        inv_cols = st.columns(min(len(member_emails), 4))
-        for i, email in enumerate(member_emails):
-            with inv_cols[i % min(len(member_emails), 4)]:
-                if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
-                    involved.append(email)
+    inv_cols = st.columns(len(member_emails))
+    for i, email in enumerate(member_emails):
+        with inv_cols[i]:
+            if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
+                involved.append(email)
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
     _, col_pills, _ = st.columns([1, 3, 1])
