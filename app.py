@@ -224,8 +224,10 @@ button[data-testid="collapsedControl"] { display: none; }
     background-color: #c0392b !important;
     color: white !important;
     border: none !important;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     font-weight: 600 !important;
+    min-width: 2.5rem !important;
+    padding: 0.4rem 0.5rem !important;
 }
 .delete-btn + div button:hover,
 .delete-btn ~ div button:hover {
@@ -391,21 +393,24 @@ if st.session_state["step"] not in ("home", "create_group"):
 if st.session_state["step"] == "home":
     user_groups = db.get_user_groups(user_email)
 
-    st.markdown('<div class="section-header">Your Groups</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; font-size: 1.3rem; font-weight: 600; color: #E8E8F0; margin: 1.5rem 0 1rem 0;">Your Groups</div>', unsafe_allow_html=True)
 
     if user_groups:
         for g in user_groups:
             n_events = len(db.get_events(g["id"]))
-            col_name, col_del = st.columns([4, 1])
+            _, col_name, col_del, _ = st.columns([0.5, 3.5, 0.5, 0.5])
             if col_name.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True):
                 st.session_state["current_group"] = g["id"]
                 st.session_state["current_event"] = None
                 st.session_state["step"] = "events"
                 st.rerun()
             if can_delete_group(user_email, g):
-                if col_del.button("X", key=f"del_{g['id']}"):
-                    db.delete_group(g["id"])
-                    st.rerun()
+                with col_del:
+                    st.markdown('<div class="delete-btn">', unsafe_allow_html=True)
+                    if st.button("X", key=f"del_{g['id']}"):
+                        db.delete_group(g["id"])
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="card" style="text-align: center; color: #8888aa;">
