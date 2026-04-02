@@ -190,9 +190,10 @@ section[data-testid="stSidebar"] {
 
 /* ── Share table in expense detail ── */
 .share-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.4rem 0;
+    display: grid;
+    grid-template-columns: 1fr 100px 120px;
+    align-items: center;
+    padding: 0.5rem 0;
     border-bottom: 1px solid rgba(108, 92, 231, 0.1);
     font-size: 0.9rem;
 }
@@ -200,8 +201,35 @@ section[data-testid="stSidebar"] {
     border-bottom: none;
 }
 .share-person { color: #E8E8F0; font-weight: 500; }
-.share-amount { color: #a29bfe; font-weight: 600; }
-.share-owes { color: #fd79a8; font-weight: 500; }
+.share-amount { color: #a29bfe; font-weight: 600; text-align: right; }
+.share-owes { color: #fd79a8; font-weight: 500; text-align: right; }
+
+/* ── Edit / Delete buttons ── */
+.edit-btn + div button,
+.edit-btn ~ div button {
+    background-color: #b8860b !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+}
+.edit-btn + div button:hover,
+.edit-btn ~ div button:hover {
+    background-color: #d4a017 !important;
+}
+.delete-btn + div button,
+.delete-btn ~ div button {
+    background-color: #c0392b !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+}
+.delete-btn + div button:hover,
+.delete-btn ~ div button:hover {
+    background-color: #e74c3c !important;
+}
+
 </style>
 """
 
@@ -690,7 +718,7 @@ if st.session_state["step"] == "expenses":
                     share_html = ""
                     for person, share in exp["shares"].items():
                         owes = share if person != exp["paid_by"] else 0
-                        owes_tag = f'<span class="share-owes">owes ${owes:.2f}</span>' if owes > 0 else '<span style="color: #00ce9e;">paid</span>'
+                        owes_tag = '<span class="share-owes">owes</span>' if owes > 0 else '<span style="color: #00ce9e;">paid</span>'
                         share_html += f"""
                         <div class="share-row">
                             <span class="share-person">{dn(person, display_map)}</span>
@@ -701,16 +729,26 @@ if st.session_state["step"] == "expenses":
 
                     btn_cols = st.columns([1, 1, 3])
                     if can_edit_expense(user_email, exp):
-                        if btn_cols[0].button("Edit", key=f"edit_{i}"):
-                            st.session_state["editing_expense"] = i
-                            st.rerun()
+                        with btn_cols[0]:
+                            with st.container():
+                                st.markdown('<div class="edit-btn">', unsafe_allow_html=True)
+                                edit_clicked = st.button("Edit", key=f"edit_{i}", use_container_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            if edit_clicked:
+                                st.session_state["editing_expense"] = i
+                                st.rerun()
                     if can_delete_expense(user_email, exp):
-                        if btn_cols[1].button("Delete", key=f"del_{i}"):
-                            notifications.notify_expense_deleted(list(exp["shares"].keys()), group_name, event_name, exp["description"], exp["amount"], user_email, group_id, event_id)
-                            db.delete_expense(exp["id"])
-                            if editing_idx is not None and editing_idx >= i:
-                                st.session_state.pop("editing_expense", None)
-                            st.rerun()
+                        with btn_cols[1]:
+                            with st.container():
+                                st.markdown('<div class="delete-btn">', unsafe_allow_html=True)
+                                del_clicked = st.button("Delete", key=f"del_{i}", use_container_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            if del_clicked:
+                                notifications.notify_expense_deleted(list(exp["shares"].keys()), group_name, event_name, exp["description"], exp["amount"], user_email, group_id, event_id)
+                                db.delete_expense(exp["id"])
+                                if editing_idx is not None and editing_idx >= i:
+                                    st.session_state.pop("editing_expense", None)
+                                st.rerun()
                 else:
                     ed_desc = st.text_input(
                         "Description", value=exp["description"], key=f"ed_desc_{i}"
