@@ -547,25 +547,6 @@ if st.session_state["step"] == "events":
 
     st.markdown('<div style="text-align: center; font-size: 1.1rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Events</div>', unsafe_allow_html=True)
 
-    # Create new event
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
-    with col2:
-        if st.button("Add Event", use_container_width=True, type="primary"):
-            if not new_event.strip():
-                st.error("Enter an event name.")
-            else:
-                event_names = [ev["name"] for ev in events]
-                if new_event.strip() in event_names:
-                    st.error("Event already exists in this group.")
-                else:
-                    ev = db.create_event(group_id, new_event.strip(), user_email)
-                    notifications.notify_event_created(member_emails, group_name, new_event.strip(), user_email, group_id, ev["id"])
-                    st.session_state["current_event"] = ev["id"]
-                    st.session_state["step"] = "expenses"
-                    st.rerun()
-
     # List existing events
     if events:
         for ev in events:
@@ -584,9 +565,29 @@ if st.session_state["step"] == "events":
     else:
         st.markdown("""
         <div class="card" style="text-align: center; color: #8888aa;">
-            No events yet. Create one above.
+            No events yet. Create one below.
         </div>
         """, unsafe_allow_html=True)
+
+    # Create new event
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
+    with col2:
+        if st.button("Add Event", use_container_width=True, type="primary"):
+            if not new_event.strip():
+                st.error("Enter an event name.")
+            else:
+                event_names = [ev["name"] for ev in events]
+                if new_event.strip() in event_names:
+                    st.error("Event already exists in this group.")
+                else:
+                    ev = db.create_event(group_id, new_event.strip(), user_email)
+                    notifications.notify_event_created(member_emails, group_name, new_event.strip(), user_email, group_id, ev["id"])
+                    st.session_state["current_event"] = ev["id"]
+                    st.session_state["step"] = "expenses"
+                    st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_edit, col_delgrp = st.columns(2)
