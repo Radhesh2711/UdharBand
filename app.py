@@ -552,15 +552,11 @@ if st.session_state["step"] == "events":
         for ev in events:
             ev_expenses = db.get_expenses(ev["id"])
             total = sum(e["amount"] for e in ev_expenses)
-            col_name, col_del = st.columns([4, 1])
-            if col_name.button(f"{ev['name']}  ·  {len(ev_expenses)} expenses  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True):
-                st.session_state["current_event"] = ev["id"]
-                st.session_state["step"] = "expenses"
-                st.rerun()
-            if can_delete_event(user_email, ev):
-                if col_del.button("X", key=f"del_ev_{ev['id']}"):
-                    notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email, group_id)
-                    db.delete_event(ev["id"])
+            _, col_center, _ = st.columns([1, 3, 1])
+            with col_center:
+                if st.button(f"{ev['name']}  ·  {len(ev_expenses)} expenses  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True):
+                    st.session_state["current_event"] = ev["id"]
+                    st.session_state["step"] = "expenses"
                     st.rerun()
     else:
         st.markdown("""
