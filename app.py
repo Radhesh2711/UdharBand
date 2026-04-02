@@ -191,7 +191,8 @@ section[data-testid="stSidebar"] {
 /* ── Share table in expense detail ── */
 .share-row {
     display: grid;
-    grid-template-columns: 1fr 100px 120px;
+    grid-template-columns: 1fr 100px 80px;
+    gap: 0 1rem;
     align-items: center;
     padding: 0.5rem 0;
     border-bottom: 1px solid rgba(108, 92, 231, 0.1);
