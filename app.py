@@ -683,22 +683,21 @@ if st.session_state["step"] == "expenses":
         for i, exp in enumerate(expenses):
             is_editing = editing_idx == i
 
-            # Render styled card header
-            render_expense_card(exp["description"], exp["amount"], dn(exp["paid_by"], display_map))
-
-            with st.expander("Details", expanded=is_editing, key=f"expander_{i}"):
+            label = f"**{exp['description']}** — ${exp['amount']:.2f}  ·  paid by {dn(exp['paid_by'], display_map)}"
+            with st.expander(label, expanded=is_editing):
                 if not is_editing:
                     # Styled share breakdown
+                    share_html = ""
                     for person, share in exp["shares"].items():
                         owes = share if person != exp["paid_by"] else 0
-                        owes_html = f'<span class="share-owes">owes ${owes:.2f}</span>' if owes > 0 else '<span style="color: #00ce9e;">paid</span>'
-                        st.markdown(f"""
+                        owes_tag = f'<span class="share-owes">owes ${owes:.2f}</span>' if owes > 0 else '<span style="color: #00ce9e;">paid</span>'
+                        share_html += f"""
                         <div class="share-row">
                             <span class="share-person">{dn(person, display_map)}</span>
                             <span class="share-amount">${share:.2f}</span>
-                            {owes_html}
-                        </div>
-                        """, unsafe_allow_html=True)
+                            {owes_tag}
+                        </div>"""
+                    st.markdown(f'<div class="card">{share_html}</div>', unsafe_allow_html=True)
 
                     btn_cols = st.columns([1, 1, 3])
                     if can_edit_expense(user_email, exp):
