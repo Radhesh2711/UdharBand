@@ -196,6 +196,10 @@ button[data-testid="collapsedControl"] { display: none; }
 /* ── Input overrides ── */
 .stTextInput > div > div > input {
     border-radius: 12px;
+    text-align: center;
+}
+.stTextInput > div > div > input::placeholder {
+    text-align: center;
 }
 .stNumberInput > div > div > input {
     border-radius: 12px;
@@ -564,6 +568,8 @@ if st.session_state["step"] == "events":
     _, col_center, _ = st.columns([1, 3, 1])
     with col_center:
         new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
+    _, col_btn, _ = st.columns([2, 1, 2])
+    with col_btn:
         if st.button("+ New Event", use_container_width=True, type="primary"):
             if not new_event.strip():
                 st.error("Enter an event name.")
