@@ -647,26 +647,34 @@ if st.session_state["step"] == "expenses":
         st.session_state["exp_counter"] = 0
     k = st.session_state["exp_counter"]
 
-    desc = st.text_input("Expense description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}")
-    amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"exp_amount_{k}")
+    _, col_form, _ = st.columns([1, 3, 1])
+    with col_form:
+        desc = st.text_input("Expense description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}")
+        amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"exp_amount_{k}")
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
     display_names_list = [dn(e, display_map) for e in member_emails]
-    paid_idx = st.radio("Paid by", range(len(member_emails)),
-                        format_func=lambda i: display_names_list[i],
-                        horizontal=True, label_visibility="collapsed", key=f"exp_paid_{k}")
+    _, col_radio1, _ = st.columns([1, 3, 1])
+    with col_radio1:
+        paid_idx = st.radio("Paid by", range(len(member_emails)),
+                            format_func=lambda i: display_names_list[i],
+                            horizontal=True, label_visibility="collapsed", key=f"exp_paid_{k}")
     paid_by = member_emails[paid_idx]
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
     involved = []
-    inv_cols = st.columns(min(len(member_emails), 4))
-    for i, email in enumerate(member_emails):
-        with inv_cols[i % min(len(member_emails), 4)]:
-            if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
-                involved.append(email)
+    _, col_checks, _ = st.columns([1, 3, 1])
+    with col_checks:
+        inv_cols = st.columns(min(len(member_emails), 4))
+        for i, email in enumerate(member_emails):
+            with inv_cols[i % min(len(member_emails), 4)]:
+                if st.checkbox(dn(email, display_map), value=True, key=f"inv_{k}_{email}"):
+                    involved.append(email)
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-    split_type = st.radio("Split", ["Equal", "Percentage", "Ratio"], horizontal=True, label_visibility="collapsed", key=f"exp_split_{k}")
+    _, col_radio2, _ = st.columns([1, 3, 1])
+    with col_radio2:
+        split_type = st.radio("Split", ["Equal", "Percentage", "Ratio"], horizontal=True, label_visibility="collapsed", key=f"exp_split_{k}")
 
     split_inputs = {}
     if split_type == "Percentage" and involved:
