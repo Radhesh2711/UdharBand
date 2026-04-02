@@ -443,6 +443,9 @@ if st.session_state["step"] == "home":
 # ═══════════════════════════════════════════════════════════════════════════════
 
 if st.session_state["step"] == "create_group":
+    if st.button("← Back"):
+        st.session_state["step"] = "home"
+        st.rerun()
     st.markdown('<div class="section-header">Create a New Group</div>', unsafe_allow_html=True)
     name = st.text_input("Group name", placeholder="e.g. Goa Trip, Flatmates")
     if st.button("Next →", type="primary"):
