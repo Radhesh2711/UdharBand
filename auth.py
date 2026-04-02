@@ -15,13 +15,18 @@ def require_login() -> str:
         db.ensure_user(email)
         return email
 
-    # Production: Streamlit Community Cloud Google OAuth
-    user_info = getattr(st, "experimental_user", None)
-    email = getattr(user_info, "email", None) if user_info else None
-
-    if not email:
+    # Production: Streamlit Community Cloud with Google OAuth
+    if not st.user.is_logged_in:
         st.title("UdharBand")
         st.info("Please sign in with your Google account to continue.")
+        st.login("google")
+        st.stop()
+
+    email = st.user.get("email")
+    if not email:
+        st.title("UdharBand")
+        st.error("Could not retrieve your email. Please try logging in again.")
+        st.logout()
         st.stop()
 
     email = email.strip().lower()
