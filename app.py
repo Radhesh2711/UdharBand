@@ -536,10 +536,10 @@ if st.session_state["step"] == "events":
     groups = db.get_user_groups(user_email)
     group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
 
-    st.markdown(f'<div style="text-align: center; font-size: 1.3rem; font-weight: 600; color: #E8E8F0; margin: 1.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 1.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
-    st.markdown('<div style="text-align: center; font-size: 1.1rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Events</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Existing Events</div>', unsafe_allow_html=True)
 
     # List existing events
     if events:
