@@ -548,7 +548,7 @@ if st.session_state["step"] == "events":
             total = sum(e["amount"] for e in ev_expenses)
             _, col_center, _ = st.columns([1, 3, 1])
             with col_center:
-                if st.button(f"{ev['name']}  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True):
+                if st.button(f"{ev['name']}  ·  ${total:.2f}", key=f"ev_{ev['id']}", use_container_width=True, type="primary"):
                     st.session_state["current_event"] = ev["id"]
                     st.session_state["step"] = "expenses"
                     st.rerun()
@@ -560,7 +560,7 @@ if st.session_state["step"] == "events":
         """, unsafe_allow_html=True)
 
     # Create new event
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
     col1, col2 = st.columns([3, 1])
     with col1:
         new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
