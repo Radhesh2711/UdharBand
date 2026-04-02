@@ -661,11 +661,10 @@ if st.session_state["step"] == "expenses":
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
     display_names_list = [dn(e, display_map) for e in member_emails]
-    _, col_radio1, _ = st.columns([0.5, 4, 0.5])
-    with col_radio1:
-        paid_idx = st.radio("Paid by", range(len(member_emails)),
-                            format_func=lambda i: display_names_list[i],
-                            horizontal=True, label_visibility="collapsed", key=f"exp_paid_{k}")
+    _, col_paid, _ = st.columns([1, 3, 1])
+    with col_paid:
+        paid_name = st.pills("Paid by", display_names_list, default=display_names_list[0], label_visibility="collapsed", key=f"exp_paid_{k}")
+    paid_idx = display_names_list.index(paid_name) if paid_name in display_names_list else 0
     paid_by = member_emails[paid_idx]
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
@@ -679,9 +678,9 @@ if st.session_state["step"] == "expenses":
                     involved.append(email)
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-    _, col_radio2, _ = st.columns([0.5, 4, 0.5])
-    with col_radio2:
-        split_type = st.radio("Split", ["Equal", "Percentage", "Ratio"], horizontal=True, label_visibility="collapsed", key=f"exp_split_{k}")
+    _, col_pills, _ = st.columns([1, 3, 1])
+    with col_pills:
+        split_type = st.pills("Split", ["Equal", "Percentage", "Ratio"], default="Equal", label_visibility="collapsed", key=f"exp_split_{k}")
 
     split_inputs = {}
     if split_type == "Percentage" and involved:
