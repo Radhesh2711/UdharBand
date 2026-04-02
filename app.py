@@ -330,7 +330,7 @@ def render_member_chips(emails, display_map):
     chips = "".join(
         f'<span class="member-chip">{dn(e, display_map)}</span>' for e in emails
     )
-    st.markdown(chips, unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center;">{chips}</div>', unsafe_allow_html=True)
 
 
 def render_settlement_card(debtor_name, creditor_name, amount):
@@ -542,11 +542,10 @@ if st.session_state["step"] == "events":
     groups = db.get_user_groups(user_email)
     group_name = next((g["name"] for g in groups if g["id"] == group_id), "Group")
 
-    st.markdown(f'<div class="section-header">{group_name}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; font-size: 1.3rem; font-weight: 600; color: #E8E8F0; margin: 1.5rem 0 0.5rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("**Events**")
+    st.markdown('<div style="text-align: center; font-size: 1.1rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Events</div>', unsafe_allow_html=True)
 
     # Create new event
     col1, col2 = st.columns([3, 1])
