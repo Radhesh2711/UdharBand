@@ -160,11 +160,6 @@ html, body {
     border-bottom: 2px solid rgba(108, 92, 231, 0.3);
 }
 
-/* ── Wider content area ── */
-.block-container {
-    max-width: 52rem !important;
-}
-
 /* ── Hide sidebar ── */
 section[data-testid="stSidebar"] { display: none; }
 button[data-testid="collapsedControl"] { display: none; }
@@ -194,6 +189,8 @@ button[data-testid="collapsedControl"] { display: none; }
 }
 .stButton > button {
     border-radius: 12px;
+    padding-top: 0.7rem !important;
+    padding-bottom: 0.7rem !important;
 }
 
 /* ── Input overrides ── */
