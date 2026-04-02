@@ -171,12 +171,21 @@ if st.session_state["step"] == "add_members":
                     db.remove_member(group_id, m["email"])
                     st.rerun()
 
-    new_email = st.text_input("Member email", placeholder="Enter their email address", key="member_input")
+    if "member_counter" not in st.session_state:
+        st.session_state["member_counter"] = 0
+    mk = st.session_state["member_counter"]
+
+    col_name, col_email = st.columns(2)
+    with col_name:
+        new_name = st.text_input("Name", placeholder="Enter their name", key=f"member_name_{mk}")
+    with col_email:
+        new_email = st.text_input("Email", placeholder="Enter their email address", key=f"member_email_{mk}")
     col_add, col_done = st.columns(2)
 
     with col_add:
         if st.button("Add Member", use_container_width=True):
             email = new_email.strip().lower()
+            name = new_name.strip()
             if not email:
                 st.error("Enter an email.")
             elif "@" not in email:
@@ -184,7 +193,8 @@ if st.session_state["step"] == "add_members":
             elif email in member_emails:
                 st.error(f"'{email}' is already a member.")
             else:
-                db.add_member(group_id, email)
+                db.add_member(group_id, email, name if name else None)
+                st.session_state["member_counter"] += 1
                 st.rerun()
 
     with col_done:

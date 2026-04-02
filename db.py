@@ -87,10 +87,10 @@ def get_group_members(group_id: str) -> list[dict]:
     return members
 
 
-def add_member(group_id: str, email: str) -> None:
+def add_member(group_id: str, email: str, display_name: str | None = None) -> None:
     sb = get_client()
     # Ensure user row exists
-    ensure_user(email)
+    ensure_user(email, display_name)
     sb.table("group_members").upsert(
         {"group_id": group_id, "user_email": email},
         on_conflict="group_id,user_email",
