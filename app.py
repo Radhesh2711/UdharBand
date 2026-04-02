@@ -565,7 +565,7 @@ if st.session_state["step"] == "events":
     with col1:
         new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
     with col2:
-        if st.button("Add Event", use_container_width=True, type="primary"):
+        if st.button("Add New Event", use_container_width=True, type="primary"):
             if not new_event.strip():
                 st.error("Enter an event name.")
             else:
