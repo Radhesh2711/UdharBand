@@ -352,7 +352,7 @@ def render_expense_card(description, amount, paid_by_name):
 
 user_email = require_login()
 
-st.markdown('<div class="page-title" style="text-align: center;">UdharBand</div>', unsafe_allow_html=True)
+st.markdown('<div class="page-title" style="text-align: center; margin-bottom: 1.5rem;">UdharBand</div>', unsafe_allow_html=True)
 col_user, col_logout = st.columns([4, 1])
 col_user.markdown(f'<div class="page-subtitle">Logged in as {user_email}</div>', unsafe_allow_html=True)
 if col_logout.button("Logout", type="secondary"):
