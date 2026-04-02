@@ -410,14 +410,14 @@ if "group" in qp and st.session_state.get("_deep_link_handled") != qp.get("group
 if st.session_state["step"] == "home":
     user_groups = db.get_user_groups(user_email)
 
-    st.markdown('<div style="text-align: center; font-size: 1.3rem; font-weight: 600; color: #E8E8F0; margin: 1.5rem 0 1rem 0;">Your Groups</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Your Groups</div>', unsafe_allow_html=True)
 
     if user_groups:
         for g in user_groups:
             n_events = len(db.get_events(g["id"]))
             _, col_center, _ = st.columns([1, 3, 1])
             with col_center:
-                if st.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True):
+                if st.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True, type="primary"):
                     st.session_state["current_group"] = g["id"]
                     st.session_state["current_event"] = None
                     st.session_state["step"] = "events"
@@ -429,33 +429,21 @@ if st.session_state["step"] == "home":
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    _, col_create, _ = st.columns([1, 3, 1])
-    with col_create:
-        if st.button("+ Create New Group", type="primary", use_container_width=True):
-            st.session_state["step"] = "create_group"
-            st.rerun()
-    render_logout()
-    st.stop()
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# CREATE GROUP
-# ═══════════════════════════════════════════════════════════════════════════════
-
-if st.session_state["step"] == "create_group":
-    if st.button("← Back"):
-        st.session_state["step"] = "home"
-        st.rerun()
-    st.markdown('<div class="section-header">Create a New Group</div>', unsafe_allow_html=True)
-    name = st.text_input("Group name", placeholder="e.g. Goa Trip, Flatmates")
-    if st.button("Next →", type="primary"):
-        if not name.strip():
-            st.error("Please enter a group name.")
-        else:
-            group = db.create_group(name.strip(), user_email)
-            st.session_state["current_group"] = group["id"]
-            st.session_state["step"] = "add_members"
-            st.rerun()
+    # Create new group inline
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    _, col_center, _ = st.columns([1, 3, 1])
+    with col_center:
+        new_group_name = st.text_input("New group name", placeholder="e.g. Goa Trip, Flatmates", label_visibility="collapsed")
+    _, col_btn, _ = st.columns([2, 1, 2])
+    with col_btn:
+        if st.button("+ New Group", use_container_width=True, type="primary"):
+            if not new_group_name.strip():
+                st.error("Please enter a group name.")
+            else:
+                group = db.create_group(new_group_name.strip(), user_email)
+                st.session_state["current_group"] = group["id"]
+                st.session_state["step"] = "add_members"
+                st.rerun()
     render_logout()
     st.stop()
 
