@@ -363,9 +363,9 @@ def render_member_chips(emails, display_map):
 def render_settlement_card(debtor_name, creditor_name, amount):
     st.markdown(f"""
     <div class="settlement-card">
-        <span class="settlement-name-left">{debtor_name}</span>
+        <span class="settlement-name-left"><span style="color: #e74c3c;">&#9660;</span> {debtor_name}</span>
         <span class="settlement-arrow">→</span>
-        <span class="settlement-name-right">{creditor_name}</span>
+        <span class="settlement-name-right"><span style="color: #00ce9e;">&#9650;</span> {creditor_name}</span>
         <span class="settlement-amount">${amount:.2f}</span>
     </div>
     """, unsafe_allow_html=True)
