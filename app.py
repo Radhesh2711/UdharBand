@@ -42,19 +42,27 @@ html, body {
     border-radius: 16px;
     padding: 1rem 1.5rem;
     margin-bottom: 0.6rem;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr 80px;
     align-items: center;
-    justify-content: space-between;
+    gap: 0 0.5rem;
 }
 .settlement-arrow {
     color: #6C5CE7;
     font-size: 1.4rem;
-    margin: 0 0.8rem;
+    text-align: center;
 }
-.settlement-name {
+.settlement-name-left {
     font-weight: 600;
     font-size: 1rem;
     color: #E8E8F0;
+    text-align: left;
+}
+.settlement-name-right {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #E8E8F0;
+    text-align: left;
 }
 .settlement-amount {
     background: linear-gradient(135deg, #6C5CE7, #a29bfe);
@@ -62,6 +70,7 @@ html, body {
     -webkit-text-fill-color: transparent;
     font-weight: 700;
     font-size: 1.2rem;
+    text-align: right;
 }
 .settled-card {
     background: linear-gradient(135deg, #1a2e1a 0%, #163e2e 100%);
@@ -354,9 +363,9 @@ def render_member_chips(emails, display_map):
 def render_settlement_card(debtor_name, creditor_name, amount):
     st.markdown(f"""
     <div class="settlement-card">
-        <span class="settlement-name">{debtor_name}</span>
+        <span class="settlement-name-left">{debtor_name}</span>
         <span class="settlement-arrow">→</span>
-        <span class="settlement-name">{creditor_name}</span>
+        <span class="settlement-name-right">{creditor_name}</span>
         <span class="settlement-amount">${amount:.2f}</span>
     </div>
     """, unsafe_allow_html=True)
