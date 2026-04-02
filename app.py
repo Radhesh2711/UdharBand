@@ -17,7 +17,7 @@ CUSTOM_CSS = """
 /* ── Global ── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, [class*="st-"] {
+html, body {
     font-family: 'Inter', sans-serif;
 }
 
@@ -683,7 +683,7 @@ if st.session_state["step"] == "expenses":
         for i, exp in enumerate(expenses):
             is_editing = editing_idx == i
 
-            label = f"**{exp['description']}** — ${exp['amount']:.2f}  ·  paid by {dn(exp['paid_by'], display_map)}"
+            label = f"{exp['description']} — ${exp['amount']:.2f} · paid by {dn(exp['paid_by'], display_map)}"
             with st.expander(label, expanded=is_editing):
                 if not is_editing:
                     # Styled share breakdown
