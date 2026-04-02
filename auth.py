@@ -19,14 +19,16 @@ def require_login() -> str:
     if not st.user.is_logged_in:
         st.title("UdharBand")
         st.info("Please sign in with your Google account to continue.")
-        st.login("google")
+        if st.button("Sign in with Google", type="primary"):
+            st.login("google")
         st.stop()
 
     email = st.user.get("email")
     if not email:
         st.title("UdharBand")
         st.error("Could not retrieve your email. Please try logging in again.")
-        st.logout()
+        if st.button("Try again"):
+            st.logout()
         st.stop()
 
     email = email.strip().lower()
