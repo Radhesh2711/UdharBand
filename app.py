@@ -219,20 +219,24 @@ button[data-testid="collapsedControl"] { display: none; }
 .edit-btn ~ div button:hover {
     background-color: #d4a017 !important;
 }
-.delete-btn + div button,
-.delete-btn ~ div button {
+/* X delete buttons */
+.del-x-btn button {
     background-color: #c0392b !important;
     color: white !important;
     border: none !important;
     border-radius: 8px !important;
-    font-weight: 600 !important;
-    min-width: 2.5rem !important;
-    padding: 0.4rem 0.5rem !important;
+    font-weight: 700 !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
-.delete-btn + div button:hover,
-.delete-btn ~ div button:hover {
+.del-x-btn button:hover {
     background-color: #e74c3c !important;
 }
+
 
 </style>
 """
@@ -398,7 +402,10 @@ if st.session_state["step"] == "home":
     if user_groups:
         for g in user_groups:
             n_events = len(db.get_events(g["id"]))
-            _, col_name, col_del, _ = st.columns([0.5, 3.5, 0.5, 0.5])
+            if can_delete_group(user_email, g):
+                _, col_name, col_del, _ = st.columns([1, 6, 1, 1])
+            else:
+                _, col_name, _ = st.columns([1, 6, 1])
             if col_name.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True):
                 st.session_state["current_group"] = g["id"]
                 st.session_state["current_event"] = None
@@ -406,11 +413,12 @@ if st.session_state["step"] == "home":
                 st.rerun()
             if can_delete_group(user_email, g):
                 with col_del:
-                    st.markdown('<div class="delete-btn">', unsafe_allow_html=True)
-                    if st.button("X", key=f"del_{g['id']}"):
+                    st.markdown('<div class="del-x-btn">', unsafe_allow_html=True)
+                    del_clicked = st.button("X", key=f"del_{g['id']}")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    if del_clicked:
                         db.delete_group(g["id"])
                         st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="card" style="text-align: center; color: #8888aa;">
@@ -560,10 +568,14 @@ if st.session_state["step"] == "events":
                 st.session_state["step"] = "expenses"
                 st.rerun()
             if can_delete_event(user_email, ev):
-                if col_del.button("X", key=f"del_ev_{ev['id']}"):
-                    notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email, group_id)
-                    db.delete_event(ev["id"])
-                    st.rerun()
+                with col_del:
+                    st.markdown('<div class="del-x-btn">', unsafe_allow_html=True)
+                    ev_del = st.button("X", key=f"del_ev_{ev['id']}")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    if ev_del:
+                        notifications.notify_event_deleted(member_emails, group_name, ev["name"], user_email, group_id)
+                        db.delete_event(ev["id"])
+                        st.rerun()
     else:
         st.markdown("""
         <div class="card" style="text-align: center; color: #8888aa;">
