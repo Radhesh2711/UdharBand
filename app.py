@@ -389,18 +389,12 @@ if st.session_state["step"] == "home":
     if user_groups:
         for g in user_groups:
             n_events = len(db.get_events(g["id"]))
-            if can_delete_group(user_email, g):
-                _, col_name, col_del, _ = st.columns([1, 6, 1, 1])
-            else:
-                _, col_name, _ = st.columns([1, 6, 1])
-            if col_name.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True):
-                st.session_state["current_group"] = g["id"]
-                st.session_state["current_event"] = None
-                st.session_state["step"] = "events"
-                st.rerun()
-            if can_delete_group(user_email, g):
-                if col_del.button("X", key=f"del_{g['id']}"):
-                    db.delete_group(g["id"])
+            _, col_center, _ = st.columns([1, 3, 1])
+            with col_center:
+                if st.button(f"{g['name']}  ·  {n_events} events", key=f"load_{g['id']}", use_container_width=True):
+                    st.session_state["current_group"] = g["id"]
+                    st.session_state["current_event"] = None
+                    st.session_state["step"] = "events"
                     st.rerun()
     else:
         st.markdown("""
@@ -410,9 +404,11 @@ if st.session_state["step"] == "home":
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("+ Create New Group", type="primary", use_container_width=True):
-        st.session_state["step"] = "create_group"
-        st.rerun()
+    _, col_create, _ = st.columns([1, 3, 1])
+    with col_create:
+        if st.button("+ Create New Group", type="primary", use_container_width=True):
+            st.session_state["step"] = "create_group"
+            st.rerun()
     st.stop()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -563,9 +559,20 @@ if st.session_state["step"] == "events":
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("← Edit Members"):
-        st.session_state["step"] = "add_members"
-        st.rerun()
+    col_edit, col_delgrp = st.columns(2)
+    with col_edit:
+        if st.button("← Edit Members", use_container_width=True):
+            st.session_state["step"] = "add_members"
+            st.rerun()
+    with col_delgrp:
+        group_data = next((g for g in groups if g["id"] == group_id), None)
+        if group_data and can_delete_group(user_email, group_data):
+            if st.button("Delete Group", use_container_width=True):
+                db.delete_group(group_id)
+                st.session_state["step"] = "home"
+                st.session_state["current_group"] = None
+                st.session_state["current_event"] = None
+                st.rerun()
 
     st.stop()
 
