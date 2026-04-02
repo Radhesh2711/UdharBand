@@ -694,9 +694,18 @@ if st.session_state["step"] == "expenses":
     involved = [member_emails[idx] for idx in sorted(st.session_state[f"involved_{k}"])]
 
     st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-    _, col_pills, _ = st.columns([1, 3, 1])
-    with col_pills:
-        split_type = st.pills("Split", ["Equal", "Percentage", "Ratio"], default="Equal", label_visibility="collapsed", key=f"exp_split_{k}")
+    split_options = ["Equal", "Percentage", "Ratio"]
+    if f"split_{k}" not in st.session_state:
+        st.session_state[f"split_{k}"] = 0
+    split_cols = st.columns(3)
+    for idx, opt in enumerate(split_options):
+        with split_cols[idx]:
+            is_selected = st.session_state[f"split_{k}"] == idx
+            btn_type = "primary" if is_selected else "secondary"
+            if st.button(opt, key=f"split_sel_{k}_{idx}", use_container_width=True, type=btn_type):
+                st.session_state[f"split_{k}"] = idx
+                st.rerun()
+    split_type = split_options[st.session_state[f"split_{k}"]]
 
     split_inputs = {}
     if split_type == "Percentage" and involved:
