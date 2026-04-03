@@ -668,10 +668,6 @@ if st.session_state["step"] == "expenses":
             amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"exp_amount_{k}", label_visibility="collapsed")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
-        display_names_list = [dn(e, display_map) for e in member_emails]
-        if f"paid_by_{k}" not in st.session_state:
-            st.session_state[f"paid_by_{k}"] = member_emails[0]
         display_names_list = [dn(e, display_map) for e in member_emails]
         paid_name = st.pills("Who paid?", display_names_list, default=display_names_list[0], key=f"paid_by_{k}")
         paid_idx = display_names_list.index(paid_name) if paid_name in display_names_list else 0
