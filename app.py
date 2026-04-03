@@ -837,7 +837,7 @@ if st.session_state["step"] == "expenses":
                         </div>"""
                     st.markdown(f'<div class="card">{share_html}</div>', unsafe_allow_html=True)
 
-                    btn_cols = st.columns([1, 1, 3])
+                    btn_cols = st.columns(2)
                     if can_edit_expense(user_email, exp):
                         with btn_cols[0]:
                             if st.button("Edit", key=f"edit_{i}", use_container_width=True, icon=":material/edit:"):
@@ -845,8 +845,7 @@ if st.session_state["step"] == "expenses":
                                 st.rerun()
                     if can_delete_expense(user_email, exp):
                         with btn_cols[1]:
-                            del_clicked = st.button("Delete", key=f"del_{i}", use_container_width=True, icon=":material/delete:")
-                            if del_clicked:
+                            if st.button("Delete", key=f"del_{i}", use_container_width=True, icon=":material/delete:"):
                                 notifications.notify_expense_deleted(list(exp["shares"].keys()), group_name, event_name, exp["description"], exp["amount"], user_email, group_id, event_id)
                                 db.delete_expense(exp["id"])
                                 if editing_idx is not None and editing_idx >= i:
