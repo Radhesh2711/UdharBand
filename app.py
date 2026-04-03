@@ -210,17 +210,7 @@ button[data-testid="collapsedControl"] { display: none; }
 .stTextInput > div > div > input::placeholder {
     text-align: center;
 }
-/* ── Spread pills evenly ── */
-div[data-testid="stPills"] > div > div {
-    justify-content: space-between !important;
-    width: 100% !important;
-    gap: 0.5rem !important;
-}
-div[data-testid="stPills"] > div > div > button {
-    flex: 1 !important;
-}
-
-/* ── Center radio buttons and pills ── */
+/* ── Center radio buttons ── */
 .stRadio > div,
 .stRadio > div > div,
 .stRadio div[role="radiogroup"],
@@ -680,18 +670,54 @@ if st.session_state["step"] == "expenses":
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
         display_names_list = [dn(e, display_map) for e in member_emails]
-        paid_name = st.pills("paid", display_names_list, default=display_names_list[0], key=f"paid_by_{k}", label_visibility="collapsed")
-        paid_idx = display_names_list.index(paid_name) if paid_name in display_names_list else 0
-        paid_by = member_emails[paid_idx]
+        paid_cols = st.columns(len(member_emails))
+        for idx, email in enumerate(member_emails):
+            with paid_cols[idx]:
+                st.button(
+                    display_names_list[idx],
+                    key=f"paid_sel_{k}_{idx}",
+                    use_container_width=True,
+                    type="primary" if st.session_state.get(f"paid_by_{k}", member_emails[0]) == email else "secondary",
+                    on_click=lambda e=email: st.session_state.update({f"paid_by_{k}": e}),
+                )
+        paid_by = st.session_state.get(f"paid_by_{k}", member_emails[0])
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
-        involved_names = st.pills("involved", display_names_list, default=display_names_list, selection_mode="multi", key=f"involved_{k}", label_visibility="collapsed")
-        involved = [member_emails[display_names_list.index(n)] for n in involved_names] if involved_names else []
+        if f"involved_{k}" not in st.session_state:
+            st.session_state[f"involved_{k}"] = set(member_emails)
+        inv_cols = st.columns(len(member_emails))
+        for idx, email in enumerate(member_emails):
+            with inv_cols[idx]:
+                is_in = email in st.session_state[f"involved_{k}"]
+                def toggle_involved(e=email, ky=f"involved_{k}"):
+                    if e in st.session_state[ky]:
+                        st.session_state[ky].discard(e)
+                    else:
+                        st.session_state[ky].add(e)
+                st.button(
+                    display_names_list[idx],
+                    key=f"inv_{k}_{idx}",
+                    use_container_width=True,
+                    type="primary" if is_in else "secondary",
+                    on_click=toggle_involved,
+                )
+        involved = [e for e in member_emails if e in st.session_state[f"involved_{k}"]]
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-        split_type = st.pills("split", ["Equal", "Percentage", "Ratio"], default="Equal", key=f"split_{k}", label_visibility="collapsed")
+        split_options = ["Equal", "Percentage", "Ratio"]
+        split_cols = st.columns(3)
+        for idx, opt in enumerate(split_options):
+            with split_cols[idx]:
+                st.button(
+                    opt,
+                    key=f"split_sel_{k}_{idx}",
+                    use_container_width=True,
+                    type="primary" if st.session_state.get(f"split_{k}", "Equal") == opt else "secondary",
+                    on_click=lambda o=opt: st.session_state.update({f"split_{k}": o}),
+                )
+        split_type = st.session_state.get(f"split_{k}", "Equal")
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
