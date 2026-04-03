@@ -496,6 +496,7 @@ if st.session_state["step"] == "add_members":
             if m["email"] != user_email or len(members) > 1:
                 if c2.button("Remove", key=f"rm_{m['email']}"):
                     db.remove_member(group_id, m["email"])
+                    notifications.notify_removed_from_group(m["email"], group_name)
                     st.rerun()
 
     if "member_counter" not in st.session_state:

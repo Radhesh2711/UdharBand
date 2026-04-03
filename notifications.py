@@ -74,6 +74,20 @@ def notify_added_to_group(member_email: str, group_name: str, added_by: str, gro
     )
 
 
+def notify_removed_from_group(member_email: str, group_name: str):
+    """Notify a person they were removed from a group."""
+    _send_email(
+        member_email,
+        f"UdharBand: You were removed from '{group_name}'",
+        f"""
+        <p>Hi!</p>
+        <p>You have been removed from the group <strong>{group_name}</strong>.</p>
+        <p>Sorry to see you go. Looking forward to serving you again!</p>
+        <p>UdharBand</p>
+        """,
+    )
+
+
 def notify_event_created(member_emails: list[str], group_name: str, event_name: str,
                          created_by: str, group_id: str, event_id: str):
     """Notify all group members when an event is created."""
