@@ -811,7 +811,7 @@ if st.session_state["step"] == "expenses":
             is_editing = editing_idx == i
 
             label = f"{exp['description']} — ${exp['amount']:.2f} · paid by {dn(exp['paid_by'], display_map)}"
-            _, col_exp, _ = st.columns([0.5, 4, 0.5])
+            _, col_exp, _ = st.columns([1, 3, 1])
             with col_exp:
                 if st.button(label, key=f"exp_toggle_{i}", use_container_width=True):
                     if st.session_state.get("expanded_expense") == i:
