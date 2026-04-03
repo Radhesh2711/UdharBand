@@ -672,53 +672,17 @@ if st.session_state["step"] == "expenses":
         display_names_list = [dn(e, display_map) for e in member_emails]
         if f"paid_by_{k}" not in st.session_state:
             st.session_state[f"paid_by_{k}"] = member_emails[0]
-        # Process any button clicks first, then rerun once
-        _needs_rerun = False
-
-        paid_cols = st.columns(len(member_emails))
-        for idx, email in enumerate(member_emails):
-            with paid_cols[idx]:
-                is_selected = st.session_state[f"paid_by_{k}"] == email
-                btn_type = "primary" if is_selected else "secondary"
-                if st.button(dn(email, display_map), key=f"paid_sel_{k}_{idx}", use_container_width=True, type=btn_type):
-                    st.session_state[f"paid_by_{k}"] = email
-                    _needs_rerun = True
-        paid_by = st.session_state[f"paid_by_{k}"]
+        display_names_list = [dn(e, display_map) for e in member_emails]
+        paid_name = st.pills("Who paid?", display_names_list, default=display_names_list[0], key=f"paid_by_{k}")
+        paid_idx = display_names_list.index(paid_name) if paid_name in display_names_list else 0
+        paid_by = member_emails[paid_idx]
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
-        if f"involved_{k}" not in st.session_state:
-            st.session_state[f"involved_{k}"] = set(member_emails)
-        inv_cols = st.columns(len(member_emails))
-        for idx, email in enumerate(member_emails):
-            with inv_cols[idx]:
-                is_in = email in st.session_state[f"involved_{k}"]
-                btn_type = "primary" if is_in else "secondary"
-                if st.button(dn(email, display_map), key=f"inv_{k}_{idx}", use_container_width=True, type=btn_type):
-                    if is_in:
-                        st.session_state[f"involved_{k}"].discard(email)
-                    else:
-                        st.session_state[f"involved_{k}"].add(email)
-                    _needs_rerun = True
-        involved = [e for e in member_emails if e in st.session_state[f"involved_{k}"]]
+        involved_names = st.pills("Who is part of this expense?", display_names_list, default=display_names_list, selection_mode="multi", key=f"involved_{k}")
+        involved = [member_emails[display_names_list.index(n)] for n in involved_names] if involved_names else []
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-        split_options = ["Equal", "Percentage", "Ratio"]
-        if f"split_{k}" not in st.session_state:
-            st.session_state[f"split_{k}"] = "Equal"
-        split_cols = st.columns(3)
-        for idx, opt in enumerate(split_options):
-            with split_cols[idx]:
-                is_selected = st.session_state[f"split_{k}"] == opt
-                btn_type = "primary" if is_selected else "secondary"
-                if st.button(opt, key=f"split_sel_{k}_{idx}", use_container_width=True, type=btn_type):
-                    st.session_state[f"split_{k}"] = opt
-                    _needs_rerun = True
-        split_type = st.session_state[f"split_{k}"]
-
-        if _needs_rerun:
-            st.rerun()
+        split_type = st.pills("How to split?", ["Equal", "Percentage", "Ratio"], default="Equal", key=f"split_{k}")
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
