@@ -210,7 +210,7 @@ button[data-testid="collapsedControl"] { display: none; }
 .stTextInput > div > div > input::placeholder {
     text-align: center;
 }
-/* ── Center radio buttons ── */
+/* ── Center radio buttons and pills ── */
 .stRadio > div,
 .stRadio > div > div,
 .stRadio div[role="radiogroup"],
@@ -219,6 +219,19 @@ button[data-testid="collapsedControl"] { display: none; }
     justify-content: center !important;
     display: flex !important;
     flex-wrap: wrap !important;
+}
+/* Center pills labels and options */
+[data-testid="stPills"] > label,
+[data-testid="stPills"] > div > label {
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+    color: #a29bfe !important;
+    font-weight: 500 !important;
+}
+[data-testid="stPills"] > div,
+[data-testid="stPills"] > div > div {
+    justify-content: center !important;
 }
 
 .stNumberInput > div > div > input {
