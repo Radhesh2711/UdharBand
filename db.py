@@ -81,6 +81,7 @@ def get_group_members(group_id: str) -> list[dict]:
         sb.table("group_members")
         .select("user_email, users(email, display_name)")
         .eq("group_id", group_id)
+        .order("added_at")
         .execute()
     )
     members = []
