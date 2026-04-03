@@ -220,19 +220,6 @@ button[data-testid="collapsedControl"] { display: none; }
     display: flex !important;
     flex-wrap: wrap !important;
 }
-/* Center pills labels and options */
-[data-testid="stPills"] > label,
-[data-testid="stPills"] > div > label {
-    text-align: center !important;
-    display: block !important;
-    width: 100% !important;
-    color: #a29bfe !important;
-    font-weight: 500 !important;
-}
-[data-testid="stPills"] > div,
-[data-testid="stPills"] > div > div {
-    justify-content: center !important;
-}
 
 .stNumberInput > div > div > input {
     border-radius: 12px;
@@ -681,17 +668,20 @@ if st.session_state["step"] == "expenses":
             amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"exp_amount_{k}", label_visibility="collapsed")
 
         st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
         display_names_list = [dn(e, display_map) for e in member_emails]
-        paid_name = st.pills("Who paid?", display_names_list, default=display_names_list[0], key=f"paid_by_{k}")
+        paid_name = st.pills("paid", display_names_list, default=display_names_list[0], key=f"paid_by_{k}", label_visibility="collapsed")
         paid_idx = display_names_list.index(paid_name) if paid_name in display_names_list else 0
         paid_by = member_emails[paid_idx]
 
         st.markdown("<br>", unsafe_allow_html=True)
-        involved_names = st.pills("Who is part of this expense?", display_names_list, default=display_names_list, selection_mode="multi", key=f"involved_{k}")
+        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
+        involved_names = st.pills("involved", display_names_list, default=display_names_list, selection_mode="multi", key=f"involved_{k}", label_visibility="collapsed")
         involved = [member_emails[display_names_list.index(n)] for n in involved_names] if involved_names else []
 
         st.markdown("<br>", unsafe_allow_html=True)
-        split_type = st.pills("How to split?", ["Equal", "Percentage", "Ratio"], default="Equal", key=f"split_{k}")
+        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
+        split_type = st.pills("split", ["Equal", "Percentage", "Ratio"], default="Equal", key=f"split_{k}", label_visibility="collapsed")
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
