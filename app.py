@@ -511,7 +511,7 @@ if st.session_state["step"] == "add_members":
     col_add, col_done = st.columns(2)
 
     with col_add:
-        if st.button("Add Member", use_container_width=True):
+        if st.button("Notify and + Member", use_container_width=True):
             email = new_email.strip().lower()
             name = new_name.strip()
             if not email:
