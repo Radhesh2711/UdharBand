@@ -210,6 +210,16 @@ button[data-testid="collapsedControl"] { display: none; }
 .stTextInput > div > div > input::placeholder {
     text-align: center;
 }
+/* ── Spread pills evenly ── */
+div[data-testid="stPills"] > div > div {
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 0.5rem !important;
+}
+div[data-testid="stPills"] > div > div > button {
+    flex: 1 !important;
+}
+
 /* ── Center radio buttons and pills ── */
 .stRadio > div,
 .stRadio > div > div,
