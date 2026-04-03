@@ -75,6 +75,40 @@ def notify_added_to_group(member_email: str, group_name: str, added_by: str, gro
     )
 
 
+def notify_group_deleted(member_emails: list[str], group_name: str, deleted_by: str,
+                         settlements: list[tuple]):
+    """Notify all group members when a group is deleted, with final settlement snapshot."""
+    if settlements:
+        table_rows = ""
+        for debtor, creditor, amt in settlements:
+            table_rows += f"<tr><td style='padding:4px 12px;'>{creditor}</td><td style='padding:4px 12px;'>{debtor}</td><td style='padding:4px 12px;'>${amt:.2f}</td></tr>"
+        settlement_html = f"""
+        <table style="border-collapse: collapse; margin: 0.5rem auto;">
+            <tr style="border-bottom: 1px solid #555;">
+                <th style="padding:4px 12px; text-align:left;">Creditor</th>
+                <th style="padding:4px 12px; text-align:left;">Debtor</th>
+                <th style="padding:4px 12px; text-align:left;">Amount</th>
+            </tr>
+            {table_rows}
+        </table>"""
+    else:
+        settlement_html = "<p>Everything settled!</p>"
+
+    recipients = [e for e in member_emails if e != deleted_by]
+    _send_to_many(
+        recipients,
+        f"UdharBand: Group '{group_name}' has been deleted",
+        f"""
+        <p>Hi again.</p>
+        <p><strong>{deleted_by}</strong> deleted the group <strong>{group_name}</strong>.</p>
+        <p><strong>Last settlement snapshot:</strong></p>
+        {settlement_html}
+        <p>Hope to see you again.</p>
+        <p>UdharBand.</p>
+        """,
+    )
+
+
 def notify_removed_from_group(member_email: str, group_name: str):
     """Notify a person they were removed from a group."""
     _send_email(

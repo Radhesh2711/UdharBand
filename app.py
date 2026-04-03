@@ -612,6 +612,14 @@ if st.session_state["step"] == "events":
     if show_delete:
         with col_delgrp:
             if st.button("Delete Group", key="del_group", use_container_width=True, icon=":material/delete:"):
+                # Gather all expenses across all events for final settlement
+                all_expenses = []
+                for ev in events:
+                    all_expenses.extend(db.get_expenses(ev["id"]))
+                raw_settlements = simplify_debts(member_emails, all_expenses)
+                # Convert emails to display names for the email
+                named_settlements = [(dn(d, display_map), dn(c, display_map), a) for d, c, a in raw_settlements]
+                notifications.notify_group_deleted(member_emails, group_name, user_email, named_settlements)
                 db.delete_group(group_id)
                 st.session_state["step"] = "home"
                 st.session_state["current_group"] = None
