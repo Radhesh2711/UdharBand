@@ -822,6 +822,8 @@ if st.session_state["step"] == "expenses":
 
             is_expanded = st.session_state.get("expanded_expense") == i or is_editing
             if is_expanded:
+              _, col_detail, _ = st.columns([1, 3, 1])
+              with col_detail:
                 if not is_editing:
                     share_html = ""
                     for person, share in exp["shares"].items():
