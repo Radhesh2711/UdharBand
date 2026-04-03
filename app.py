@@ -672,6 +672,9 @@ if st.session_state["step"] == "expenses":
         display_names_list = [dn(e, display_map) for e in member_emails]
         if f"paid_by_{k}" not in st.session_state:
             st.session_state[f"paid_by_{k}"] = member_emails[0]
+        # Process any button clicks first, then rerun once
+        _needs_rerun = False
+
         paid_cols = st.columns(len(member_emails))
         for idx, email in enumerate(member_emails):
             with paid_cols[idx]:
@@ -679,7 +682,7 @@ if st.session_state["step"] == "expenses":
                 btn_type = "primary" if is_selected else "secondary"
                 if st.button(dn(email, display_map), key=f"paid_sel_{k}_{idx}", use_container_width=True, type=btn_type):
                     st.session_state[f"paid_by_{k}"] = email
-                    st.rerun()
+                    _needs_rerun = True
         paid_by = st.session_state[f"paid_by_{k}"]
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -696,7 +699,7 @@ if st.session_state["step"] == "expenses":
                         st.session_state[f"involved_{k}"].discard(email)
                     else:
                         st.session_state[f"involved_{k}"].add(email)
-                    st.rerun()
+                    _needs_rerun = True
         involved = [e for e in member_emails if e in st.session_state[f"involved_{k}"]]
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -711,8 +714,11 @@ if st.session_state["step"] == "expenses":
                 btn_type = "primary" if is_selected else "secondary"
                 if st.button(opt, key=f"split_sel_{k}_{idx}", use_container_width=True, type=btn_type):
                     st.session_state[f"split_{k}"] = opt
-                    st.rerun()
+                    _needs_rerun = True
         split_type = st.session_state[f"split_{k}"]
+
+        if _needs_rerun:
+            st.rerun()
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
