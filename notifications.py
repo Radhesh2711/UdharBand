@@ -66,10 +66,11 @@ def notify_added_to_group(member_email: str, group_name: str, added_by: str, gro
         member_email,
         f"UdharBand: You were added to '{group_name}'",
         f"""
-        <p>Hi!</p>
-        <p><strong>{added_by}</strong> added you to the group <strong>{group_name}</strong> on UdharBand.</p>
-        <p>Use this email <strong>{member_email}</strong> to sign in with Google on UdharBand.</p>
+        <p>Hi! Welcome to UdharBand.</p>
+        <p><strong>{added_by}</strong> added you to a group <strong>{group_name}</strong>. Use this email <strong>{member_email}</strong> to sign in with Google.</p>
+        <p>Hope you enjoy the experience.</p>
         <p><a href="{link}">Open {group_name} →</a></p>
+        <p>UdharBand</p>
         """,
     )
 
