@@ -983,43 +983,44 @@ if st.session_state["step"] == "expenses":
             st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Settlements</div>', unsafe_allow_html=True)
             if settlements:
                 for s_idx, (debtor, creditor, amt) in enumerate(settlements):
-                    render_settlement_card(
-                        dn(debtor, display_map),
-                        dn(creditor, display_map),
-                        amt,
-                    )
+                    col_card, col_btn = st.columns([3, 1])
+                    with col_card:
+                        render_settlement_card(
+                            dn(debtor, display_map),
+                            dn(creditor, display_map),
+                            amt,
+                        )
                     status = settlement_statuses.get((debtor, creditor), "pending")
                     is_debtor = user_email == debtor
                     is_creditor = user_email == creditor
                     is_party = is_debtor or is_creditor
 
-                    _, col_settle_btn, _ = st.columns([1, 2, 1])
-                    with col_settle_btn:
+                    with col_btn:
                         if status == "approved":
-                            st.button("Settled", key=f"settle_{s_idx}", use_container_width=True, disabled=True, icon=":material/check_circle:")
+                            st.button("Settled", key=f"settle_{s_idx}", disabled=True, icon=":material/check_circle:")
                         elif status == "debtor_settled":
                             if is_debtor:
-                                st.button("Waiting approval", key=f"settle_{s_idx}", use_container_width=True, disabled=True)
+                                st.button("Waiting", key=f"settle_{s_idx}", disabled=True)
                             elif is_creditor:
-                                if st.button("Approve", key=f"settle_{s_idx}", use_container_width=True, type="primary", icon=":material/check:"):
+                                if st.button("Approve", key=f"settle_{s_idx}", type="primary", icon=":material/check:"):
                                     db.upsert_settlement_status(event_id, debtor, creditor, amt, "approved")
                                     notifications.notify_creditor_approved(debtor, dn(creditor, display_map), amt, event_name, group_name, group_id, event_id)
                                     st.rerun()
                             else:
-                                st.button("Waiting approval", key=f"settle_{s_idx}", use_container_width=True, disabled=True)
+                                st.button("Waiting", key=f"settle_{s_idx}", disabled=True)
                         else:  # pending
                             if is_creditor:
-                                if st.button("Settle", key=f"settle_{s_idx}", use_container_width=True, type="primary"):
+                                if st.button("Settle", key=f"settle_{s_idx}", type="primary"):
                                     db.upsert_settlement_status(event_id, debtor, creditor, amt, "approved")
                                     notifications.notify_creditor_settled_directly(debtor, dn(creditor, display_map), amt, event_name, group_name, group_id, event_id)
                                     st.rerun()
                             elif is_debtor:
-                                if st.button("Settle", key=f"settle_{s_idx}", use_container_width=True, type="primary"):
+                                if st.button("Settle", key=f"settle_{s_idx}", type="primary"):
                                     db.upsert_settlement_status(event_id, debtor, creditor, amt, "debtor_settled")
                                     notifications.notify_debtor_settled(creditor, dn(debtor, display_map), amt, event_name, group_name, group_id, event_id)
                                     st.rerun()
                             elif is_party:
-                                st.button("Settle", key=f"settle_{s_idx}", use_container_width=True, disabled=True)
+                                st.button("Settle", key=f"settle_{s_idx}", disabled=True)
             else:
                 st.markdown("""
                 <div class="settled-card">
