@@ -989,15 +989,13 @@ if st.session_state["step"] == "expenses":
                     is_party = is_debtor or is_creditor
 
                     with st.container(border=True):
-                        _, col_debtor, col_creditor, col_amt, _ = st.columns([0.3, 1.2, 1.2, 0.8, 0.3])
+                        col_debtor, col_creditor, col_amt, col_settle = st.columns([1.2, 1.2, 0.8, 1])
                         with col_debtor:
                             st.markdown(f'<div style="color: #e74c3c; font-weight: 600;">&#9660; {dn(debtor, display_map)}</div>', unsafe_allow_html=True)
                         with col_creditor:
                             st.markdown(f'<div style="color: #00ce9e; font-weight: 600;">&#9650; {dn(creditor, display_map)}</div>', unsafe_allow_html=True)
                         with col_amt:
                             st.markdown(f'<div style="color: #a29bfe; font-weight: 700; font-size: 1.1rem;">${amt:.2f}</div>', unsafe_allow_html=True)
-
-                        _, col_settle, _ = st.columns([1.5, 1, 1.5])
                         with col_settle:
                             if status == "approved":
                                 st.button("Settled", key=f"settle_{s_idx}", use_container_width=True, disabled=True, icon=":material/check_circle:")
