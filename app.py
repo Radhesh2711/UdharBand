@@ -656,6 +656,23 @@ if st.session_state["step"] == "expenses":
     st.markdown(f'<div style="text-align: center; font-size: 1.2rem; font-weight: 500; color: #a29bfe; margin: 0 0 1.2rem 0;">{event_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
+    # ── Your balance summary ─────────────────────────────────────────────────
+
+    if expenses:
+        my_settlements = simplify_debts(member_emails, expenses)
+        my_owe = [(d, c, a) for d, c, a in my_settlements if d == user_email]
+        my_owed = [(d, c, a) for d, c, a in my_settlements if c == user_email]
+
+        if my_owe or my_owed:
+            balance_html = ""
+            for debtor, creditor, amt in my_owe:
+                balance_html += f'<div style="text-align: center; margin: 0.3rem 0; font-size: 1rem;">You owe <strong>{dn(creditor, display_map)}</strong> <strong style="color: #e74c3c;">${amt:.2f}</strong> <span style="color: #e74c3c;">&#9660;</span></div>'
+            for debtor, creditor, amt in my_owed:
+                balance_html += f'<div style="text-align: center; margin: 0.3rem 0; font-size: 1rem;"><strong>{dn(debtor, display_map)}</strong> owes you <strong style="color: #00ce9e;">${amt:.2f}</strong> <span style="color: #00ce9e;">&#9650;</span></div>'
+            st.markdown(f'<div style="margin: 2rem 0 1rem 0;">{balance_html}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="text-align: center; margin: 2rem 0 1rem 0; font-size: 1rem;">You are all settled up <span style="color: #00ce9e;">&#10004;</span></div>', unsafe_allow_html=True)
+
     # ── Add Expense ───────────────────────────────────────────────────────────
 
     st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Add Expense</div>', unsafe_allow_html=True)
