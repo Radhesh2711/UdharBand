@@ -978,37 +978,20 @@ if st.session_state["step"] == "expenses":
                 st.session_state["show_simplified"] = True
 
         if st.session_state.get("show_simplified"):
-            raw_settlements = simplify_debts(member_emails, expenses)
+            settlements = simplify_debts(member_emails, expenses)
             settlement_statuses = db.get_settlement_statuses(event_id)
-
-            # Subtract already-approved settlements from raw totals
-            settlements = []
-            for debtor, creditor, amt in raw_settlements:
-                stored = settlement_statuses.get((debtor, creditor))
-                if stored and stored["status"] == "approved":
-                    remaining = round(amt - stored["amount"], 2)
-                    if remaining > 0.01:
-                        settlements.append((debtor, creditor, remaining))
-                    # else: fully settled, don't show
-                else:
-                    settlements.append((debtor, creditor, amt))
 
             st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Settlements</div>', unsafe_allow_html=True)
             if settlements:
                 for s_idx, (debtor, creditor, amt) in enumerate(settlements):
                     stored = settlement_statuses.get((debtor, creditor))
-                    # If approved but has remaining amount, it's a new pending settlement
-                    if stored and stored["status"] == "approved" and abs(amt - stored["amount"]) > 0.01:
-                        status = "pending"
-                    elif stored and stored["status"] != "approved":
-                        # Check if amount changed since last action (debtor_settled but amount shifted)
+                    if stored and stored["status"] != "approved":
+                        # If amount changed while in debtor_settled state, reset
                         if abs(stored["amount"] - amt) > 0.01:
                             db.reset_settlement_status(event_id, debtor, creditor)
                             status = "pending"
                         else:
                             status = stored["status"]
-                    elif stored:
-                        status = stored["status"]
                     else:
                         status = "pending"
                     is_debtor = user_email == debtor
@@ -1024,14 +1007,14 @@ if st.session_state["step"] == "expenses":
                         with col_amt:
                             st.markdown(f'<div style="color: #a29bfe; font-weight: 700; font-size: 1.1rem;">${amt:.2f}</div>', unsafe_allow_html=True)
                         with col_settle:
-                            if status == "approved":
-                                st.button("Settled", key=f"settle_{s_idx}", use_container_width=True, disabled=True, icon=":material/check_circle:")
-                            elif status == "debtor_settled":
+                            if status == "debtor_settled":
                                 if is_debtor:
                                     st.button("Waiting", key=f"settle_{s_idx}", use_container_width=True, disabled=True)
                                 elif is_creditor:
                                     if st.button("Approve", key=f"settle_{s_idx}", use_container_width=True, type="primary", icon=":material/check:"):
-                                        db.upsert_settlement_status(event_id, debtor, creditor, amt, "approved")
+                                        # Record settlement as an expense so simplify_debts accounts for it
+                                        db.create_expense(event_id, f"Settlement: {dn(debtor, display_map)} → {dn(creditor, display_map)}", amt, debtor, user_email, {creditor: amt})
+                                        db.reset_settlement_status(event_id, debtor, creditor)
                                         notifications.notify_creditor_approved(debtor, dn(creditor, display_map), amt, event_name, group_name, group_id, event_id)
                                         st.rerun()
                                 else:
@@ -1039,7 +1022,8 @@ if st.session_state["step"] == "expenses":
                             else:  # pending
                                 if is_creditor:
                                     if st.button("Settle", key=f"settle_{s_idx}", use_container_width=True, type="primary"):
-                                        db.upsert_settlement_status(event_id, debtor, creditor, amt, "approved")
+                                        # Creditor settles directly — record as expense
+                                        db.create_expense(event_id, f"Settlement: {dn(debtor, display_map)} → {dn(creditor, display_map)}", amt, debtor, user_email, {creditor: amt})
                                         notifications.notify_creditor_settled_directly(debtor, dn(creditor, display_map), amt, event_name, group_name, group_id, event_id)
                                         st.rerun()
                                 elif is_debtor:
