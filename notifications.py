@@ -76,37 +76,77 @@ def notify_added_to_group(member_email: str, group_name: str, added_by: str, gro
 
 
 def notify_group_deleted(member_emails: list[str], group_name: str, deleted_by: str,
-                         settlements: list[tuple]):
-    """Notify all group members when a group is deleted, with final settlement snapshot."""
-    if settlements:
-        table_rows = ""
-        for debtor, creditor, amt in settlements:
-            table_rows += f"<tr><td style='padding:4px 12px;'>{creditor}</td><td style='padding:4px 12px;'>{debtor}</td><td style='padding:4px 12px;'>${amt:.2f}</td></tr>"
-        settlement_html = f"""
-        <table style="border-collapse: collapse; margin: 0.5rem auto;">
-            <tr style="border-bottom: 1px solid #555;">
-                <th style="padding:4px 12px; text-align:left;">Creditor</th>
-                <th style="padding:4px 12px; text-align:left;">Debtor</th>
-                <th style="padding:4px 12px; text-align:left;">Amount</th>
-            </tr>
-            {table_rows}
-        </table>"""
-    else:
-        settlement_html = "<p>Everything settled!</p>"
+                         event_settlements: list[dict], display_map: dict):
+    """Notify all group members when a group is deleted, with per-event settlement snapshots.
 
-    recipients = [e for e in member_emails if e != deleted_by]
-    _send_to_many(
-        recipients,
-        f"UdharBand: Group '{group_name}' has been deleted",
-        f"""
-        <p>Hi again.</p>
-        <p><strong>{deleted_by}</strong> deleted the group <strong>{group_name}</strong>.</p>
-        <p><strong>Last settlement snapshot:</strong></p>
-        {settlement_html}
-        <p>Hope to see you again.</p>
-        <p>UdharBand.</p>
-        """,
-    )
+    event_settlements: [{"name": "Event Name", "settlements": [(debtor_email, creditor_email, amt), ...]}]
+    display_map: {email: display_name}
+    """
+    def _dn(email):
+        return display_map.get(email, email.split("@")[0])
+
+    for recipient in member_emails:
+        if recipient == deleted_by:
+            continue
+
+        # Calculate total owed/owe for this recipient across all events
+        total_owed_to_me = 0.0  # others owe me
+        total_i_owe = 0.0       # I owe others
+        for ev in event_settlements:
+            for debtor, creditor, amt in ev["settlements"]:
+                if creditor == recipient:
+                    total_owed_to_me += amt
+                elif debtor == recipient:
+                    total_i_owe += amt
+
+        # Summary line
+        if total_owed_to_me > 0.01 or total_i_owe > 0.01:
+            summary_parts = []
+            if total_owed_to_me > 0.01:
+                summary_parts.append(f"You are owed <strong>${total_owed_to_me:.2f}</strong>")
+            if total_i_owe > 0.01:
+                summary_parts.append(f"You owe <strong>${total_i_owe:.2f}</strong>")
+            summary_html = f"<p><strong>Your total:</strong> {' and '.join(summary_parts)}.</p>"
+        else:
+            summary_html = "<p>You are settled for this group. No debts, no credits.</p>"
+
+        # Per-event breakdown (only settlements involving this recipient)
+        events_html = ""
+        for ev in event_settlements:
+            my_settlements = [
+                (d, c, a) for d, c, a in ev["settlements"]
+                if d == recipient or c == recipient
+            ]
+            events_html += f"<h3 style='margin: 1rem 0 0.3rem 0;'>{ev['name']}</h3>"
+            if my_settlements:
+                rows = ""
+                for debtor, creditor, amt in my_settlements:
+                    rows += f"<tr><td style='padding:4px 12px;'>{_dn(creditor)}</td><td style='padding:4px 12px;'>{_dn(debtor)}</td><td style='padding:4px 12px;'>${amt:.2f}</td></tr>"
+                events_html += f"""
+                <table style="border-collapse: collapse; margin: 0.3rem 0;">
+                    <tr style="border-bottom: 1px solid #555;">
+                        <th style="padding:4px 12px; text-align:left;">Creditor</th>
+                        <th style="padding:4px 12px; text-align:left;">Debtor</th>
+                        <th style="padding:4px 12px; text-align:left;">Amount</th>
+                    </tr>
+                    {rows}
+                </table>"""
+            else:
+                events_html += "<p style='color: #888;'>No settlements for you in this event.</p>"
+
+        _send_email(
+            recipient,
+            f"UdharBand: Group '{group_name}' has been deleted",
+            f"""
+            <p>Hi again.</p>
+            <p><strong>{_dn(deleted_by)}</strong> deleted the group <strong>{group_name}</strong>.</p>
+            {summary_html}
+            <p><strong>Settlement breakdown by event:</strong></p>
+            {events_html}
+            <p>Hope to see you again.</p>
+            <p>UdharBand.</p>
+            """,
+        )
 
 
 def notify_removed_from_group(member_email: str, group_name: str):
