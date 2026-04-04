@@ -978,18 +978,39 @@ if st.session_state["step"] == "expenses":
                 st.session_state["show_simplified"] = True
 
         if st.session_state.get("show_simplified"):
-            settlements = simplify_debts(member_emails, expenses)
+            raw_settlements = simplify_debts(member_emails, expenses)
             settlement_statuses = db.get_settlement_statuses(event_id)
+
+            # Subtract already-approved settlements from raw totals
+            settlements = []
+            for debtor, creditor, amt in raw_settlements:
+                stored = settlement_statuses.get((debtor, creditor))
+                if stored and stored["status"] == "approved":
+                    remaining = round(amt - stored["amount"], 2)
+                    if remaining > 0.01:
+                        settlements.append((debtor, creditor, remaining))
+                    # else: fully settled, don't show
+                else:
+                    settlements.append((debtor, creditor, amt))
+
             st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Settlements</div>', unsafe_allow_html=True)
             if settlements:
                 for s_idx, (debtor, creditor, amt) in enumerate(settlements):
                     stored = settlement_statuses.get((debtor, creditor))
-                    # Reset if amount changed since last settlement action
-                    if stored and abs(stored["amount"] - amt) > 0.01:
-                        db.reset_settlement_status(event_id, debtor, creditor)
+                    # If approved but has remaining amount, it's a new pending settlement
+                    if stored and stored["status"] == "approved" and abs(amt - stored["amount"]) > 0.01:
                         status = "pending"
+                    elif stored and stored["status"] != "approved":
+                        # Check if amount changed since last action (debtor_settled but amount shifted)
+                        if abs(stored["amount"] - amt) > 0.01:
+                            db.reset_settlement_status(event_id, debtor, creditor)
+                            status = "pending"
+                        else:
+                            status = stored["status"]
+                    elif stored:
+                        status = stored["status"]
                     else:
-                        status = stored["status"] if stored else "pending"
+                        status = "pending"
                     is_debtor = user_email == debtor
                     is_creditor = user_email == creditor
                     is_party = is_debtor or is_creditor
