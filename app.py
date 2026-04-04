@@ -1011,7 +1011,8 @@ if st.session_state["step"] == "expenses":
     if show_del_ev:
         with col_del_ev:
             if st.button("Delete Event", key="del_event", use_container_width=True, icon=":material/delete:"):
-                notifications.notify_event_deleted(member_emails, group_name, event_name, user_email, group_id)
+                ev_settlements = simplify_debts(member_emails, expenses)
+                notifications.notify_event_deleted(member_emails, group_name, event_name, user_email, group_id, ev_settlements, dict(display_map))
                 db.delete_event(event_id)
                 st.session_state["current_event"] = None
                 st.session_state["step"] = "events"

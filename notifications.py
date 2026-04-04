@@ -212,19 +212,60 @@ def notify_expense_added(shares: dict[str, float], group_name: str, event_name: 
 
 
 def notify_event_deleted(member_emails: list[str], group_name: str, event_name: str,
-                         deleted_by: str, group_id: str):
-    """Notify all group members when an event is deleted."""
+                         deleted_by: str, group_id: str, settlements: list[tuple] = None,
+                         display_map: dict = None):
+    """Notify all group members when an event is deleted, with personalized settlement snapshot."""
     link = _app_link(group_id=group_id)
-    recipients = [e for e in member_emails if e != deleted_by]
-    _send_to_many(
-        recipients,
-        f"UdharBand: Event '{event_name}' deleted from '{group_name}'",
-        f"""
-        <p>Hi!</p>
-        <p><strong>{deleted_by}</strong> deleted the event <strong>{event_name}</strong> from the group <strong>{group_name}</strong>.</p>
-        <p><a href="{link}">Open {group_name} →</a></p>
-        """,
-    )
+    settlements = settlements or []
+    display_map = display_map or {}
+
+    def _dn(email):
+        return display_map.get(email, email.split("@")[0])
+
+    for recipient in member_emails:
+        if recipient == deleted_by:
+            continue
+
+        # Find settlements involving this recipient
+        my_settlements = [(d, c, a) for d, c, a in settlements if d == recipient or c == recipient]
+
+        if my_settlements:
+            # Net balance per person
+            balances = {}
+            for debtor, creditor, amt in my_settlements:
+                if creditor == recipient:
+                    balances[debtor] = balances.get(debtor, 0) + amt
+                elif debtor == recipient:
+                    balances[creditor] = balances.get(creditor, 0) - amt
+
+            summary_lines = []
+            for person, net in balances.items():
+                if net < -0.01:
+                    summary_lines.append(f"You owe <strong>{_dn(person)}</strong> <strong>${-net:.2f}</strong>")
+                elif net > 0.01:
+                    summary_lines.append(f"<strong>{_dn(person)}</strong> owes you <strong>${net:.2f}</strong>")
+
+            if summary_lines:
+                settlement_html = "<p><strong>Last settlement snapshot:</strong></p><ul>"
+                for line in summary_lines:
+                    settlement_html += f"<li>{line}</li>"
+                settlement_html += "</ul>"
+            else:
+                settlement_html = "<p>You are all settled for this event 😉</p>"
+        else:
+            settlement_html = "<p>You are all settled for this event 😉</p>"
+
+        _send_email(
+            recipient,
+            f"UdharBand: Event '{event_name}' deleted from '{group_name}'",
+            f"""
+            <p>Hi!</p>
+            <p><strong>{_dn(deleted_by)}</strong> deleted the event <strong>{event_name}</strong> from the group <strong>{group_name}</strong>.</p>
+            {settlement_html}
+            <p><a href="{link}">Open {group_name} →</a></p>
+            <p>UdharBand.</p>
+            """,
+        )
 
 
 def notify_event_edited(member_emails: list[str], group_name: str, event_name: str,
