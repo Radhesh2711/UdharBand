@@ -258,15 +258,34 @@ def delete_expense(expense_id: str) -> None:
 
 
 def get_settlement_statuses(event_id: str) -> dict:
-    """Returns {(debtor_email, creditor_email): status} for an event."""
+    """Returns {(debtor_email, creditor_email): {"status": ..., "amount": ...}} for an event."""
     sb = get_client()
     resp = (
         sb.table("settlement_status")
-        .select("debtor_email, creditor_email, status")
+        .select("debtor_email, creditor_email, status, amount")
         .eq("event_id", event_id)
         .execute()
     )
-    return {(r["debtor_email"], r["creditor_email"]): r["status"] for r in resp.data}
+    return {
+        (r["debtor_email"], r["creditor_email"]): {
+            "status": r["status"],
+            "amount": float(r["amount"]),
+        }
+        for r in resp.data
+    }
+
+
+def reset_settlement_status(event_id: str, debtor_email: str, creditor_email: str) -> None:
+    """Delete a settlement status record so it resets to pending."""
+    sb = get_client()
+    (
+        sb.table("settlement_status")
+        .delete()
+        .eq("event_id", event_id)
+        .eq("debtor_email", debtor_email)
+        .eq("creditor_email", creditor_email)
+        .execute()
+    )
 
 
 def upsert_settlement_status(event_id: str, debtor_email: str, creditor_email: str,

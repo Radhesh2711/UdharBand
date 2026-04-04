@@ -983,7 +983,13 @@ if st.session_state["step"] == "expenses":
             st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Settlements</div>', unsafe_allow_html=True)
             if settlements:
                 for s_idx, (debtor, creditor, amt) in enumerate(settlements):
-                    status = settlement_statuses.get((debtor, creditor), "pending")
+                    stored = settlement_statuses.get((debtor, creditor))
+                    # Reset if amount changed since last settlement action
+                    if stored and abs(stored["amount"] - amt) > 0.01:
+                        db.reset_settlement_status(event_id, debtor, creditor)
+                        status = "pending"
+                    else:
+                        status = stored["status"] if stored else "pending"
                     is_debtor = user_email == debtor
                     is_creditor = user_email == creditor
                     is_party = is_debtor or is_creditor
