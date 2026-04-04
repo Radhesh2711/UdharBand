@@ -213,11 +213,12 @@ def notify_expense_added(shares: dict[str, float], group_name: str, event_name: 
 
 def notify_event_deleted(member_emails: list[str], group_name: str, event_name: str,
                          deleted_by: str, group_id: str, settlements: list[tuple] = None,
-                         display_map: dict = None):
-    """Notify all group members when an event is deleted, with personalized settlement snapshot."""
+                         display_map: dict = None, expenses: list[dict] = None):
+    """Notify all group members when an event is deleted, with personalized settlement and transaction history."""
     link = _app_link(group_id=group_id)
     settlements = settlements or []
     display_map = display_map or {}
+    expenses = expenses or []
 
     def _dn(email):
         return display_map.get(email, email.split("@")[0])
@@ -230,7 +231,6 @@ def notify_event_deleted(member_emails: list[str], group_name: str, event_name: 
         my_settlements = [(d, c, a) for d, c, a in settlements if d == recipient or c == recipient]
 
         if my_settlements:
-            # Net balance per person
             balances = {}
             for debtor, creditor, amt in my_settlements:
                 if creditor == recipient:
@@ -255,6 +255,32 @@ def notify_event_deleted(member_emails: list[str], group_name: str, event_name: 
         else:
             settlement_html = "<p>You are all settled for this event 😉</p>"
 
+        # Transaction history — expenses this recipient was part of
+        my_expenses = [e for e in expenses if recipient in e.get("shares", {})]
+        if my_expenses:
+            tx_rows = ""
+            for exp in my_expenses:
+                share = exp["shares"].get(recipient, 0)
+                tx_rows += f"""<tr>
+                    <td style='padding:4px 12px;'>{exp['description']}</td>
+                    <td style='padding:4px 12px;'>${exp['amount']:.2f}</td>
+                    <td style='padding:4px 12px;'>{_dn(exp['paid_by'])}</td>
+                    <td style='padding:4px 12px;'>${share:.2f}</td>
+                </tr>"""
+            tx_html = f"""
+            <p><strong>Your transaction history:</strong></p>
+            <table style="border-collapse: collapse; margin: 0.3rem 0;">
+                <tr style="border-bottom: 1px solid #555;">
+                    <th style="padding:4px 12px; text-align:left;">Description</th>
+                    <th style="padding:4px 12px; text-align:left;">Total</th>
+                    <th style="padding:4px 12px; text-align:left;">Paid by</th>
+                    <th style="padding:4px 12px; text-align:left;">Your share</th>
+                </tr>
+                {tx_rows}
+            </table>"""
+        else:
+            tx_html = ""
+
         _send_email(
             recipient,
             f"UdharBand: Event '{event_name}' deleted from '{group_name}'",
@@ -262,6 +288,7 @@ def notify_event_deleted(member_emails: list[str], group_name: str, event_name: 
             <p>Hi!</p>
             <p><strong>{_dn(deleted_by)}</strong> deleted the event <strong>{event_name}</strong> from the group <strong>{group_name}</strong>.</p>
             {settlement_html}
+            {tx_html}
             <p><a href="{link}">Open {group_name} →</a></p>
             <p>UdharBand.</p>
             """,
