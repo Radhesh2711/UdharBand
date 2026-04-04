@@ -697,7 +697,7 @@ if st.session_state["step"] == "expenses":
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
         display_names_list = [dn(e, display_map) for e in member_emails]
-        paid_cols = st.columns(len(member_emails))
+        paid_cols = st.columns(max(len(member_emails), 1))
         for idx, email in enumerate(member_emails):
             with paid_cols[idx]:
                 st.button(
@@ -713,7 +713,7 @@ if st.session_state["step"] == "expenses":
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
         if f"involved_{k}" not in st.session_state:
             st.session_state[f"involved_{k}"] = set(member_emails)
-        inv_cols = st.columns(len(member_emails))
+        inv_cols = st.columns(max(len(member_emails), 1))
         for idx, email in enumerate(member_emails):
             with inv_cols[idx]:
                 is_in = email in st.session_state[f"involved_{k}"]
@@ -771,6 +771,7 @@ if st.session_state["step"] == "expenses":
         with col_add_btn:
             add_clicked = st.button("+ Add Expense", type="primary", use_container_width=True)
     if add_clicked:
+        amount = None
         if not desc.strip():
             st.error("Enter a description.")
         elif not amount_str.strip():
@@ -1002,13 +1003,19 @@ if st.session_state["step"] == "expenses":
             if settlements:
                 for s_idx, (debtor, creditor, amt) in enumerate(settlements):
                     stored = settlement_statuses.get((debtor, creditor))
-                    if stored and stored["status"] != "approved":
-                        # If amount changed while in debtor_settled state, reset
+                    if not stored:
+                        status = "pending"
+                    elif stored["status"] == "approved":
+                        # Approved settlements are recorded as expenses,
+                        # so they won't appear here. But if they do, keep approved.
+                        status = "approved"
+                    elif stored["status"] == "debtor_settled":
+                        # If amount changed while waiting for approval, reset
                         if abs(stored["amount"] - amt) > 0.01:
                             db.reset_settlement_status(event_id, debtor, creditor)
                             status = "pending"
                         else:
-                            status = stored["status"]
+                            status = "debtor_settled"
                     else:
                         status = "pending"
                     is_debtor = user_email == debtor
@@ -1024,7 +1031,9 @@ if st.session_state["step"] == "expenses":
                         with col_amt:
                             st.markdown(f'<div style="color: #a29bfe; font-weight: 700; font-size: 1.1rem;">${amt:.2f}</div>', unsafe_allow_html=True)
                         with col_settle:
-                            if status == "debtor_settled":
+                            if status == "approved":
+                                st.button("Settled", key=f"settle_{s_idx}", use_container_width=True, disabled=True, icon=":material/check_circle:")
+                            elif status == "debtor_settled":
                                 if is_debtor:
                                     st.button("Waiting", key=f"settle_{s_idx}", use_container_width=True, disabled=True)
                                 elif is_creditor:
