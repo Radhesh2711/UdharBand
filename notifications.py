@@ -351,3 +351,57 @@ def notify_expense_deleted(involved_emails: list[str], group_name: str, event_na
         <p><a href="{link}">Open {event_name} →</a></p>
         """,
     )
+
+
+# ── Settlement notifications ─────────────────────────────────────────────────
+
+
+def notify_debtor_settled(creditor_email: str, debtor_name: str, amount: float,
+                          event_name: str, group_name: str, group_id: str, event_id: str):
+    """Notify creditor that debtor claims to have settled."""
+    link = _app_link(group_id=group_id, event_id=event_id)
+    _send_email(
+        creditor_email,
+        f"UdharBand: {debtor_name} has settled with you",
+        f"""
+        <p>Hi!</p>
+        <p><strong>{debtor_name}</strong> has settled your share of <strong>${amount:.2f}</strong> for <strong>{event_name}</strong> under <strong>{group_name}</strong>.</p>
+        <p>If received, don't forget to approve on UdharBand.</p>
+        <p><a href="{link}">Open {event_name} →</a></p>
+        <p>UdharBand.</p>
+        """,
+    )
+
+
+def notify_creditor_approved(debtor_email: str, creditor_name: str, amount: float,
+                              event_name: str, group_name: str, group_id: str, event_id: str):
+    """Notify debtor that creditor approved the settlement."""
+    link = _app_link(group_id=group_id, event_id=event_id)
+    _send_email(
+        debtor_email,
+        f"UdharBand: {creditor_name} approved your settlement",
+        f"""
+        <p>Hi!</p>
+        <p><strong>{creditor_name}</strong> approves of your settlement of <strong>${amount:.2f}</strong> for <strong>{event_name}</strong> under <strong>{group_name}</strong>.</p>
+        <p>You are amazing! 🤩</p>
+        <p><a href="{link}">Open {event_name} →</a></p>
+        <p>UdharBand.</p>
+        """,
+    )
+
+
+def notify_creditor_settled_directly(debtor_email: str, creditor_name: str, amount: float,
+                                      event_name: str, group_name: str, group_id: str, event_id: str):
+    """Notify debtor that creditor has directly confirmed settlement."""
+    link = _app_link(group_id=group_id, event_id=event_id)
+    _send_email(
+        debtor_email,
+        f"UdharBand: {creditor_name} confirmed your settlement",
+        f"""
+        <p>Hi!</p>
+        <p><strong>{creditor_name}</strong> approves of your settlement of <strong>${amount:.2f}</strong> for <strong>{event_name}</strong> under <strong>{group_name}</strong>.</p>
+        <p>You are amazing! 🤩</p>
+        <p><a href="{link}">Open {event_name} →</a></p>
+        <p>UdharBand.</p>
+        """,
+    )

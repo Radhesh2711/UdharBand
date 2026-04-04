@@ -252,3 +252,34 @@ def update_expense(
 def delete_expense(expense_id: str) -> None:
     sb = get_client()
     sb.table("expenses").delete().eq("id", expense_id).execute()
+
+
+# ── Settlement Status ────────────────────────────────────────────────────────
+
+
+def get_settlement_statuses(event_id: str) -> dict:
+    """Returns {(debtor_email, creditor_email): status} for an event."""
+    sb = get_client()
+    resp = (
+        sb.table("settlement_status")
+        .select("debtor_email, creditor_email, status")
+        .eq("event_id", event_id)
+        .execute()
+    )
+    return {(r["debtor_email"], r["creditor_email"]): r["status"] for r in resp.data}
+
+
+def upsert_settlement_status(event_id: str, debtor_email: str, creditor_email: str,
+                              amount: float, status: str) -> None:
+    sb = get_client()
+    sb.table("settlement_status").upsert(
+        {
+            "event_id": event_id,
+            "debtor_email": debtor_email,
+            "creditor_email": creditor_email,
+            "amount": amount,
+            "status": status,
+            "updated_at": "now()",
+        },
+        on_conflict="event_id,debtor_email,creditor_email",
+    ).execute()

@@ -49,3 +49,14 @@ CREATE TABLE expense_shares (
     share_amount NUMERIC(12, 2) NOT NULL CHECK (share_amount >= 0),
     UNIQUE (expense_id, user_email)
 );
+
+CREATE TABLE settlement_status (
+    id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_id     UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    debtor_email TEXT NOT NULL REFERENCES users(email),
+    creditor_email TEXT NOT NULL REFERENCES users(email),
+    amount       NUMERIC(12, 2) NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'pending',
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (event_id, debtor_email, creditor_email)
+);
