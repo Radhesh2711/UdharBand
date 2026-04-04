@@ -89,24 +89,30 @@ def notify_group_deleted(member_emails: list[str], group_name: str, deleted_by: 
         if recipient == deleted_by:
             continue
 
-        # Calculate total owed/owe for this recipient across all events
-        total_owed_to_me = 0.0  # others owe me
-        total_i_owe = 0.0       # I owe others
+        # Calculate net balance for this recipient across all events
+        # Positive = others owe me, negative = I owe others
+        balances = {}  # {other_email: net_amount}
         for ev in event_settlements:
             for debtor, creditor, amt in ev["settlements"]:
                 if creditor == recipient:
-                    total_owed_to_me += amt
+                    balances[debtor] = balances.get(debtor, 0) + amt
                 elif debtor == recipient:
-                    total_i_owe += amt
+                    balances[creditor] = balances.get(creditor, 0) - amt
 
         # Summary line
-        if total_owed_to_me > 0.01 or total_i_owe > 0.01:
-            summary_parts = []
-            if total_owed_to_me > 0.01:
-                summary_parts.append(f"You are owed <strong>${total_owed_to_me:.2f}</strong>")
-            if total_i_owe > 0.01:
-                summary_parts.append(f"You owe <strong>${total_i_owe:.2f}</strong>")
-            summary_html = f"<p><strong>Your total:</strong> {' and '.join(summary_parts)}.</p>"
+        owe_lines = []
+        owed_lines = []
+        for person, net in balances.items():
+            if net < -0.01:
+                owe_lines.append(f"You owe <strong>{_dn(person)}</strong> <strong>${-net:.2f}</strong>")
+            elif net > 0.01:
+                owed_lines.append(f"<strong>{_dn(person)}</strong> owes you <strong>${net:.2f}</strong>")
+
+        if owe_lines or owed_lines:
+            summary_html = "<p><strong>Your total:</strong></p><ul>"
+            for line in owe_lines + owed_lines:
+                summary_html += f"<li>{line}</li>"
+            summary_html += "</ul>"
         else:
             summary_html = "<p>You are settled for this group. No debts, no credits.</p>"
 
@@ -132,7 +138,7 @@ def notify_group_deleted(member_emails: list[str], group_name: str, deleted_by: 
                     {rows}
                 </table>"""
             else:
-                events_html += "<p style='color: #888;'>No settlements for you in this event.</p>"
+                events_html += "<p style='color: #888;'>You are all settled for this event 😉</p>"
 
         _send_email(
             recipient,
