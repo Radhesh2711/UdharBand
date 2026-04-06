@@ -311,25 +311,69 @@ def notify_event_edited(member_emails: list[str], group_name: str, event_name: s
     )
 
 
-def notify_expense_edited(involved_emails: list[str], group_name: str, event_name: str,
-                          description: str, amount: float, edited_by: str,
+def notify_expense_edited(new_shares: dict[str, float], old_shares: dict[str, float],
+                          group_name: str, event_name: str,
+                          new_description: str, old_description: str,
+                          new_amount: float, old_amount: float,
+                          paid_by_name: str, edited_by: str,
                           group_id: str, event_id: str):
-    """Notify people involved in an expense when it's edited."""
+    """Notify people involved in an expense when it's edited, with personalized details."""
     link = _app_link(group_id=group_id, event_id=event_id)
-    recipients = [e for e in involved_emails if e != edited_by]
-    _send_to_many(
-        recipients,
-        f"UdharBand: Expense edited in '{group_name} / {event_name}'",
-        f"""
-        <p>Hi!</p>
-        <p><strong>{edited_by}</strong> edited an expense in <strong>{group_name} / {event_name}</strong>:</p>
-        <ul>
-            <li><strong>Description:</strong> {description}</li>
-            <li><strong>Amount:</strong> ${amount:.2f}</li>
-        </ul>
-        <p><a href="{link}">Open {event_name} →</a></p>
-        """,
-    )
+    all_involved = set(list(new_shares.keys()) + list(old_shares.keys()))
+
+    for email in all_involved:
+        if email == edited_by:
+            continue
+
+        was_in = email in old_shares
+        now_in = email in new_shares
+        share = new_shares.get(email, 0)
+
+        # Build change details
+        changes = ""
+        if old_description != new_description:
+            changes += f"<li>The expense was described as <strong>{new_description}</strong></li>"
+        if abs(old_amount - new_amount) > 0.01:
+            changes += f"<li>The amount was changed to <strong>${new_amount:.2f}</strong></li>"
+
+        if was_in and not now_in:
+            # Removed from expense
+            _send_email(
+                email,
+                f"UdharBand: Expense edited in '{group_name} / {event_name}'",
+                f"""
+                <p>Hi!</p>
+                <p><strong>{edited_by}</strong> edited the expense <strong>{old_description}</strong>.</p>
+                {f'<ul>{changes}</ul>' if changes else ''}
+                <p>You were removed from expense <strong>{new_description}</strong> in <strong>{event_name}</strong> for group <strong>{group_name}</strong>.</p>
+                <ul>
+                    <li><strong>Amount:</strong> ${new_amount:.2f}</li>
+                    <li><strong>Paid by:</strong> {paid_by_name}</li>
+                    <li><strong>Your share:</strong> $0.00</li>
+                </ul>
+                <p><a href="{link}">Open {event_name} →</a></p>
+                <p>UdharBand.</p>
+                """,
+            )
+        else:
+            # Still in or newly added
+            _send_email(
+                email,
+                f"UdharBand: Expense edited in '{group_name} / {event_name}'",
+                f"""
+                <p>Hi!</p>
+                <p><strong>{edited_by}</strong> edited the expense <strong>{old_description}</strong>.</p>
+                {f'<ul>{changes}</ul>' if changes else ''}
+                <ul>
+                    <li><strong>Description:</strong> {new_description}</li>
+                    <li><strong>Amount:</strong> ${new_amount:.2f}</li>
+                    <li><strong>Paid by:</strong> {paid_by_name}</li>
+                    <li><strong>Your share:</strong> ${share:.2f}</li>
+                </ul>
+                <p><a href="{link}">Open {event_name} →</a></p>
+                <p>UdharBand.</p>
+                """,
+            )
 
 
 def notify_expense_deleted(involved_emails: list[str], group_name: str, event_name: str,

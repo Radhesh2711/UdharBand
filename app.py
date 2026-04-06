@@ -976,8 +976,20 @@ if st.session_state["step"] == "expenses":
                                 st.error(error)
                             else:
                                 db.update_expense(exp["id"], ed_desc.strip(), ed_amount, ed_paid, shares)
-                                all_involved = set(list(shares.keys()) + list(exp["shares"].keys()))
-                                notifications.notify_expense_edited(list(all_involved), group_name, event_name, ed_desc.strip(), ed_amount, user_email, group_id, event_id)
+                                notifications.notify_expense_edited(
+                                    new_shares=shares,
+                                    old_shares=exp["shares"],
+                                    group_name=group_name,
+                                    event_name=event_name,
+                                    new_description=ed_desc.strip(),
+                                    old_description=exp["description"],
+                                    new_amount=ed_amount,
+                                    old_amount=exp["amount"],
+                                    paid_by_name=dn(ed_paid, display_map),
+                                    edited_by=user_email,
+                                    group_id=group_id,
+                                    event_id=event_id,
+                                )
                                 st.session_state.pop("editing_expense", None)
                                 st.rerun()
 
