@@ -346,11 +346,7 @@ def notify_expense_edited(new_shares: dict[str, float], old_shares: dict[str, fl
                 <p><strong>{edited_by}</strong> edited the expense <strong>{old_description}</strong>.</p>
                 {f'<ul>{changes}</ul>' if changes else ''}
                 <p>You were removed from expense <strong>{new_description}</strong> in <strong>{event_name}</strong> for group <strong>{group_name}</strong>.</p>
-                <ul>
-                    <li><strong>Amount:</strong> ${new_amount:.2f}</li>
-                    <li><strong>Paid by:</strong> {paid_by_name}</li>
-                    <li><strong>Your share:</strong> $0.00</li>
-                </ul>
+                <p><strong>Your share:</strong> $0.00</p>
                 <p><a href="{link}">Open {event_name} →</a></p>
                 <p>UdharBand.</p>
                 """,
