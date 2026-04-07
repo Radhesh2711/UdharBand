@@ -616,7 +616,7 @@ if st.session_state["step"] == "events":
             st.session_state["current_event"] = None
             st.rerun()
     with col_edit:
-        if st.button("Edit Members", key="edit_members", use_container_width=True):
+        if st.button("Edit Members", key="edit_members", use_container_width=True, icon=":material/edit:"):
             st.session_state["step"] = "add_members"
             st.rerun()
     if show_delete:
