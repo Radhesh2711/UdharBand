@@ -27,7 +27,15 @@ def require_login() -> str:
                 Split expenses with friends, effortlessly.</div>
         </div>
         """, unsafe_allow_html=True)
-        _, col_btn, _ = st.columns([1, 2, 1])
+        st.markdown("""
+        <style>
+        .stButton > button {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
         with col_btn:
             if st.button("SIGN IN WITH GOOGLE", type="primary", use_container_width=True, icon=":material/login:"):
                 st.login("google")
