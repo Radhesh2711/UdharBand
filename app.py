@@ -435,7 +435,37 @@ if "group" in qp and st.session_state.get("_deep_link_handled") != qp.get("group
 if st.session_state["step"] == "home":
     user_groups = db.get_user_groups(user_email)
 
-    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Your Groups</div>', unsafe_allow_html=True)
+    # Create new group dialog
+    @st.dialog("New Group")
+    def new_group_dialog():
+        st.write("**Group Name**")
+        new_group_name = st.text_input("name", placeholder="e.g. Goa Trip, Flatmates", label_visibility="collapsed")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        _, col_cancel, col_confirm, _ = st.columns([1, 1, 1, 1])
+        with col_cancel:
+            cancel = st.button("Close", key="grp_dlg_cancel", use_container_width=True, icon=":material/cancel:")
+        with col_confirm:
+            confirm = st.button("Done", key="grp_dlg_confirm", use_container_width=True, icon=":material/check_circle:", type="primary")
+
+        if cancel:
+            st.rerun()
+        if confirm:
+            if not new_group_name.strip():
+                st.error("Please enter a group name.")
+            else:
+                group = db.create_group(new_group_name.strip(), user_email)
+                st.session_state["current_group"] = group["id"]
+                st.session_state["step"] = "add_members"
+                st.rerun()
+
+    st.markdown('<div style="margin-top: 3rem;"></div>', unsafe_allow_html=True)
+    _, col_btn, _ = st.columns([2, 1, 2])
+    with col_btn:
+        if st.button("New Group", use_container_width=True, type="primary", icon=":material/add:"):
+            new_group_dialog()
+
+    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 3rem 0 0.8rem 0;">Your Groups</div>', unsafe_allow_html=True)
 
     if user_groups:
         for g in user_groups:
@@ -449,25 +479,10 @@ if st.session_state["step"] == "home":
     else:
         st.markdown("""
         <div class="card" style="text-align: center; color: #8888aa;">
-            No groups yet. Create one below!
+            No groups yet. Create one above!
         </div>
         """, unsafe_allow_html=True)
 
-    # Create new group inline
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    _, col_center, _ = st.columns([1, 3, 1])
-    with col_center:
-        new_group_name = st.text_input("New group name", placeholder="e.g. Goa Trip, Flatmates", label_visibility="collapsed")
-    _, col_btn, _ = st.columns([2, 1, 2])
-    with col_btn:
-        if st.button("+ New Group", use_container_width=True, type="primary"):
-            if not new_group_name.strip():
-                st.error("Please enter a group name.")
-            else:
-                group = db.create_group(new_group_name.strip(), user_email)
-                st.session_state["current_group"] = group["id"]
-                st.session_state["step"] = "add_members"
-                st.rerun()
     render_logout()
     st.stop()
 
