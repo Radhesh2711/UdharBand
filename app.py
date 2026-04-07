@@ -738,13 +738,15 @@ if st.session_state["step"] == "expenses":
         st.write("**Amount**")
         amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"dlg_amt_{k}", label_visibility="collapsed")
 
-        st.write("**Who paid?**")
+        st.markdown('<div style="margin-top: 1.5rem;"></div>', unsafe_allow_html=True)
+        st.markdown('**Who paid?**')
         paid_idx = st.radio("paid", range(len(member_emails)),
                             format_func=lambda i: display_names_list[i],
                             horizontal=True, key=f"dlg_paid_{k}", label_visibility="collapsed")
         paid_by = member_emails[paid_idx]
 
-        st.write("**Who is part of this expense?**")
+        st.markdown('<div style="margin-top: 1rem;"></div>', unsafe_allow_html=True)
+        st.markdown('**Who is part of this expense?**')
         involved = []
         inv_cols = st.columns(max(len(member_emails), 1))
         for idx, email in enumerate(member_emails):
@@ -752,7 +754,8 @@ if st.session_state["step"] == "expenses":
                 if st.checkbox(display_names_list[idx], value=True, key=f"dlg_inv_{k}_{idx}"):
                     involved.append(email)
 
-        st.write("**How to split?**")
+        st.markdown('<div style="margin-top: 1rem;"></div>', unsafe_allow_html=True)
+        st.markdown('**How to split?**')
         split_type = st.radio("split", ["Equal", "Percentage", "Ratio"],
                               horizontal=True, key=f"dlg_split_{k}", label_visibility="collapsed")
 
