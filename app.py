@@ -842,10 +842,20 @@ if st.session_state["step"] == "expenses":
     # ── Expense History ───────────────────────────────────────────────────────
 
     if expenses:
-        st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Expenses</div>', unsafe_allow_html=True)
-        editing_idx = st.session_state.get("editing_expense")
+        st.markdown("<br>", unsafe_allow_html=True)
+        _, col_exp_toggle, _ = st.columns([1, 3, 1])
+        with col_exp_toggle:
+            exp_icon = ":material/expand_less:" if st.session_state.get("show_expenses") else ":material/expand_more:"
+            if st.button(f"Expenses ({len(expenses)})", key="toggle_expenses", use_container_width=True, type="primary", icon=exp_icon):
+                st.session_state["show_expenses"] = not st.session_state.get("show_expenses", False)
+                st.rerun()
+
+        _show_expenses = st.session_state.get("show_expenses", False)
+        editing_idx = st.session_state.get("editing_expense") if _show_expenses else None
 
         for i, exp in enumerate(expenses):
+            if not _show_expenses:
+                continue
             is_editing = editing_idx == i
 
             label = f"{exp['description']} — ${exp['amount']:.2f} · paid by {dn(exp['paid_by'], display_map)}"
@@ -1011,20 +1021,20 @@ if st.session_state["step"] == "expenses":
                             st.session_state.pop("editing_expense", None)
                             st.rerun()
 
-    # ── Simplify Expenses ─────────────────────────────────────────────────────
+    # ── Settlements ───────────────────────────────────────────────────────────
 
     if expenses:
         st.markdown("<br>", unsafe_allow_html=True)
-        _, col_simplify, _ = st.columns([1.5, 1.5, 1.5])
-        with col_simplify:
-            if st.button("Simplify Expenses", type="primary", use_container_width=True):
-                st.session_state["show_simplified"] = True
+        _, col_settle_toggle, _ = st.columns([1, 3, 1])
+        with col_settle_toggle:
+            settle_icon = ":material/expand_less:" if st.session_state.get("show_simplified") else ":material/expand_more:"
+            if st.button("Settlements", key="toggle_settlements", use_container_width=True, type="primary", icon=settle_icon):
+                st.session_state["show_simplified"] = not st.session_state.get("show_simplified", False)
+                st.rerun()
 
         if st.session_state.get("show_simplified"):
             settlements = simplify_debts(member_emails, expenses)
             settlement_statuses = db.get_settlement_statuses(event_id)
-
-            st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 1.5rem 0 0.8rem 0;">Settlements</div>', unsafe_allow_html=True)
             if settlements:
                 for s_idx, (debtor, creditor, amt) in enumerate(settlements):
                     stored = settlement_statuses.get((debtor, creditor))
