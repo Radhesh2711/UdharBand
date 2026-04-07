@@ -549,7 +549,7 @@ if st.session_state["step"] == "add_members":
         for i, m in enumerate(members):
             _, c1, c2, _ = st.columns([0.5, 4, 0.5, 0.5])
             c1.markdown(f"""
-            <div class="card" style="padding: 0.6rem 1rem; margin-bottom: 0.4rem;">
+            <div class="card" style="padding: 0.6rem 1rem; margin-bottom: 0.4rem; text-align: center;">
                 <span style="font-weight: 600; color: #E8E8F0;">{m['display_name']}</span>
                 <span style="color: #8888aa; font-size: 0.85rem; margin-left: 0.5rem;">{m['email']}</span>
             </div>
