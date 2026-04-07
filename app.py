@@ -207,6 +207,16 @@ button[data-testid="stBaseButton-tertiary"] {
     font-weight: 700 !important;
     font-size: 1.15rem !important;
 }
+/* Force font size on all button inner elements */
+.stButton > button *,
+.stButton button p,
+.stButton button span,
+button[data-testid^="stBaseButton"] *,
+button[data-testid^="stBaseButton"] p,
+button[data-testid^="stBaseButton"] span {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+}
 
 /* ── Input overrides ── */
 .stTextInput > div > div > input {
