@@ -685,76 +685,29 @@ if st.session_state["step"] == "expenses":
 
     # ── Add Expense ───────────────────────────────────────────────────────────
 
-    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Add Expense</div>', unsafe_allow_html=True)
+    display_names_list = [dn(e, display_map) for e in member_emails]
 
-    if "exp_counter" not in st.session_state:
-        st.session_state["exp_counter"] = 0
-    k = st.session_state["exp_counter"]
+    @st.dialog("Add Expense")
+    def add_expense_dialog():
+        k = st.session_state.get("exp_counter", 0)
 
-    exp_box = st.container(border=True)
-    with exp_box:
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Expense Description</div>', unsafe_allow_html=True)
-        _, col_form, _ = st.columns([0.5, 4, 0.5])
-        with col_form:
-            desc = st.text_input("desc", placeholder="e.g. Dinner, Taxi, Hotel", key=f"exp_desc_{k}", label_visibility="collapsed")
+        desc = st.text_input("desc", placeholder="e.g. Dinner, Taxi, Hotel", key=f"dlg_desc_{k}", label_visibility="collapsed")
 
-        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Amount</div>', unsafe_allow_html=True)
-        _, col_form2, _ = st.columns([0.5, 4, 0.5])
-        with col_form2:
-            amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"exp_amount_{k}", label_visibility="collapsed")
+        amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"dlg_amt_{k}", label_visibility="collapsed")
 
-        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
-        display_names_list = [dn(e, display_map) for e in member_emails]
-        paid_cols = st.columns(max(len(member_emails), 1))
-        for idx, email in enumerate(member_emails):
-            with paid_cols[idx]:
-                st.button(
-                    display_names_list[idx],
-                    key=f"paid_sel_{k}_{idx}",
-                    use_container_width=True,
-                    type="primary" if st.session_state.get(f"paid_by_{k}", member_emails[0]) == email else "secondary",
-                    on_click=lambda e=email: st.session_state.update({f"paid_by_{k}": e}),
-                )
-        paid_by = st.session_state.get(f"paid_by_{k}", member_emails[0])
+        paid_by_name = st.pills("paid", display_names_list, default=display_names_list[0], key=f"dlg_paid_{k}", label_visibility="collapsed")
+        paid_idx = display_names_list.index(paid_by_name) if paid_by_name in display_names_list else 0
+        paid_by = member_emails[paid_idx]
 
-        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
-        if f"involved_{k}" not in st.session_state:
-            st.session_state[f"involved_{k}"] = set(member_emails)
-        inv_cols = st.columns(max(len(member_emails), 1))
-        for idx, email in enumerate(member_emails):
-            with inv_cols[idx]:
-                is_in = email in st.session_state[f"involved_{k}"]
-                def toggle_involved(e=email, ky=f"involved_{k}"):
-                    if e in st.session_state[ky]:
-                        st.session_state[ky].discard(e)
-                    else:
-                        st.session_state[ky].add(e)
-                st.button(
-                    display_names_list[idx],
-                    key=f"inv_{k}_{idx}",
-                    use_container_width=True,
-                    type="primary" if is_in else "secondary",
-                    on_click=toggle_involved,
-                )
-        involved = [e for e in member_emails if e in st.session_state[f"involved_{k}"]]
+        involved_names = st.pills("involved", display_names_list, default=display_names_list, selection_mode="multi", key=f"dlg_inv_{k}", label_visibility="collapsed")
+        involved = [member_emails[display_names_list.index(n)] for n in involved_names] if involved_names else []
 
-        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-        split_options = ["Equal", "Percentage", "Ratio"]
-        split_cols = st.columns(3)
-        for idx, opt in enumerate(split_options):
-            with split_cols[idx]:
-                st.button(
-                    opt,
-                    key=f"split_sel_{k}_{idx}",
-                    use_container_width=True,
-                    type="primary" if st.session_state.get(f"split_{k}", "Equal") == opt else "secondary",
-                    on_click=lambda o=opt: st.session_state.update({f"split_{k}": o}),
-                )
-        split_type = st.session_state.get(f"split_{k}", "Equal")
+        split_type = st.pills("split", ["Equal", "Percentage", "Ratio"], default="Equal", key=f"dlg_split_{k}", label_visibility="collapsed")
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
@@ -764,7 +717,7 @@ if st.session_state["step"] == "expenses":
                 with pcols[i % min(len(involved), 4)]:
                     split_inputs[email] = st.number_input(
                         dn(email, display_map), min_value=0.0, max_value=100.0, step=0.01,
-                        format="%.2f", key=f"pct_{k}_{email}"
+                        format="%.2f", key=f"dlg_pct_{k}_{email}"
                     )
         elif split_type == "Ratio" and involved:
             st.caption("Enter ratio for each involved member:")
@@ -773,71 +726,82 @@ if st.session_state["step"] == "expenses":
                 with rcols[i % min(len(involved), 4)]:
                     split_inputs[email] = st.number_input(
                         dn(email, display_map), min_value=0.0, step=0.1,
-                        format="%.1f", key=f"rat_{k}_{email}"
+                        format="%.1f", key=f"dlg_rat_{k}_{email}"
                     )
 
         st.markdown("<br>", unsafe_allow_html=True)
-        _, col_add_btn, _ = st.columns([2, 1, 2])
-        with col_add_btn:
-            add_clicked = st.button("+ Add Expense", type="primary", use_container_width=True)
-    if add_clicked:
-        amount = None
-        if not desc.strip():
-            st.error("Enter a description.")
-        elif not amount_str.strip():
-            st.error("Enter an amount.")
-        else:
-            try:
-                amount = round(float(amount_str.strip()), 2)
-                if amount <= 0:
-                    raise ValueError()
-            except ValueError:
-                amount = None
-                st.error("Enter a valid positive number for amount.")
-        if not desc.strip() or not amount_str.strip() or amount is None:
-            pass
-        elif not involved:
-            st.error("Select at least one person involved.")
-        elif split_type == "Equal":
-            share = round(amount / len(involved), 2)
-            shares = {p: share for p in involved}
-            diff = round(amount - sum(shares.values()), 2)
-            if diff != 0:
-                shares[involved[0]] = round(shares[involved[0]] + diff, 2)
-            db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
-            notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
-            st.session_state["exp_counter"] += 1
+        col_confirm, col_cancel = st.columns(2)
+        with col_confirm:
+            confirm = st.button("", key="dlg_confirm", use_container_width=True, icon=":material/check_circle:", type="primary")
+        with col_cancel:
+            cancel = st.button("", key="dlg_cancel", use_container_width=True, icon=":material/cancel:")
+
+        if cancel:
             st.rerun()
-        elif split_type == "Percentage":
-            pcts = {m: split_inputs.get(m, 0) for m in involved}
-            total_pct = round(sum(pcts.values()), 2)
-            if abs(total_pct - 100.0) > 0.01:
-                st.error(f"Percentages sum to {total_pct}%. Must be 100%.")
+
+        if confirm:
+            amount = None
+            if not desc.strip():
+                st.error("Enter a description.")
+            elif not amount_str.strip():
+                st.error("Enter an amount.")
             else:
-                shares = {p: round(amount * v / 100, 2) for p, v in pcts.items() if v > 0}
+                try:
+                    amount = round(float(amount_str.strip()), 2)
+                    if amount <= 0:
+                        raise ValueError()
+                except ValueError:
+                    amount = None
+                    st.error("Enter a valid positive number for amount.")
+            if not desc.strip() or not amount_str.strip() or amount is None:
+                pass
+            elif not involved:
+                st.error("Select at least one person involved.")
+            elif split_type == "Equal":
+                share = round(amount / len(involved), 2)
+                shares = {p: share for p in involved}
                 diff = round(amount - sum(shares.values()), 2)
-                if diff != 0 and shares:
-                    first = next(iter(shares))
-                    shares[first] = round(shares[first] + diff, 2)
+                if diff != 0:
+                    shares[involved[0]] = round(shares[involved[0]] + diff, 2)
                 db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
                 notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
-                st.session_state["exp_counter"] += 1
+                st.session_state["exp_counter"] = st.session_state.get("exp_counter", 0) + 1
                 st.rerun()
-        elif split_type == "Ratio":
-            ratios = {m: split_inputs.get(m, 0) for m in involved}
-            total_ratio = sum(ratios.values())
-            if total_ratio == 0:
-                st.error("Ratios can't all be zero.")
-            else:
-                shares = {p: round(amount * v / total_ratio, 2) for p, v in ratios.items() if v > 0}
-                diff = round(amount - sum(shares.values()), 2)
-                if diff != 0 and shares:
-                    first = next(iter(shares))
-                    shares[first] = round(shares[first] + diff, 2)
-                db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
-                notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
-                st.session_state["exp_counter"] += 1
-                st.rerun()
+            elif split_type == "Percentage":
+                pcts = {m: split_inputs.get(m, 0) for m in involved}
+                total_pct = round(sum(pcts.values()), 2)
+                if abs(total_pct - 100.0) > 0.01:
+                    st.error(f"Percentages sum to {total_pct}%. Must be 100%.")
+                else:
+                    shares = {p: round(amount * v / 100, 2) for p, v in pcts.items() if v > 0}
+                    diff = round(amount - sum(shares.values()), 2)
+                    if diff != 0 and shares:
+                        first = next(iter(shares))
+                        shares[first] = round(shares[first] + diff, 2)
+                    db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+                    notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
+                    st.session_state["exp_counter"] = st.session_state.get("exp_counter", 0) + 1
+                    st.rerun()
+            elif split_type == "Ratio":
+                ratios = {m: split_inputs.get(m, 0) for m in involved}
+                total_ratio = sum(ratios.values())
+                if total_ratio == 0:
+                    st.error("Ratios can't all be zero.")
+                else:
+                    shares = {p: round(amount * v / total_ratio, 2) for p, v in ratios.items() if v > 0}
+                    diff = round(amount - sum(shares.values()), 2)
+                    if diff != 0 and shares:
+                        first = next(iter(shares))
+                        shares[first] = round(shares[first] + diff, 2)
+                    db.create_expense(event_id, desc.strip(), amount, paid_by, user_email, shares)
+                    notifications.notify_expense_added(shares, group_name, event_name, desc.strip(), amount, dn(paid_by, display_map), user_email, group_id, event_id)
+                    st.session_state["exp_counter"] = st.session_state.get("exp_counter", 0) + 1
+                    st.rerun()
+
+    _, col_add_btn, _ = st.columns([1, 2, 1])
+    with col_add_btn:
+        if st.button("+ Add Expense", type="primary", use_container_width=True, icon=":material/add:"):
+            add_expense_dialog()
 
     # ── Expense History ───────────────────────────────────────────────────────
 
