@@ -196,12 +196,16 @@ button[data-testid="collapsedControl"] { display: none; }
 .stButton > button[kind="secondary"] {
     border-radius: 12px;
 }
-.stButton > button {
+.stButton > button,
+.stButton button,
+button[data-testid="stBaseButton-primary"],
+button[data-testid="stBaseButton-secondary"],
+button[data-testid="stBaseButton-tertiary"] {
     border-radius: 12px;
     padding-top: 0.7rem !important;
     padding-bottom: 0.7rem !important;
     font-weight: 700 !important;
-    font-size: 1.7rem !important;
+    font-size: 1.2rem !important;
 }
 
 /* ── Input overrides ── */
