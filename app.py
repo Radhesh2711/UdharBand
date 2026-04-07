@@ -729,7 +729,7 @@ if st.session_state["step"] == "expenses":
 
     display_names_list = [dn(e, display_map) for e in member_emails]
 
-    @st.dialog("Add Expense", width="large")
+    @st.dialog("Add Expense")
     def add_expense_dialog():
         k = st.session_state.get("exp_counter", 0)
 
