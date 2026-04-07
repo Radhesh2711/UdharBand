@@ -569,13 +569,21 @@ if st.session_state["step"] == "events":
         """, unsafe_allow_html=True)
 
     # Create new event
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    _, col_center, _ = st.columns([1, 3, 1])
-    with col_center:
-        new_event = st.text_input("New event name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
-    _, col_btn, _ = st.columns([2, 1, 2])
-    with col_btn:
-        if st.button("+ New Event", use_container_width=True, type="primary"):
+    @st.dialog("New Event")
+    def new_event_dialog():
+        st.write("**Event Name**")
+        new_event = st.text_input("name", placeholder="e.g. March Expenses, Goa Day 1", label_visibility="collapsed")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        _, col_cancel, col_confirm, _ = st.columns([1, 1, 1, 1])
+        with col_cancel:
+            cancel = st.button("Close", key="ev_dlg_cancel", use_container_width=True, icon=":material/cancel:")
+        with col_confirm:
+            confirm = st.button("Done", key="ev_dlg_confirm", use_container_width=True, icon=":material/check_circle:", type="primary")
+
+        if cancel:
+            st.rerun()
+        if confirm:
             if not new_event.strip():
                 st.error("Enter an event name.")
             else:
@@ -588,6 +596,12 @@ if st.session_state["step"] == "events":
                     st.session_state["current_event"] = ev["id"]
                     st.session_state["step"] = "expenses"
                     st.rerun()
+
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
+    with col_btn:
+        if st.button("+ New Event", use_container_width=True, type="primary", icon=":material/add:"):
+            new_event_dialog()
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     show_delete = group_data and can_delete_group(user_email, group_data)
