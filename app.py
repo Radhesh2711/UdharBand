@@ -146,7 +146,7 @@ html, body {
 
 /* ── Page header ── */
 .page-title {
-    font-size: 3rem;
+    font-size: 4rem;
     font-weight: 700;
     background: linear-gradient(135deg, #6C5CE7, #a29bfe, #fd79a8);
     -webkit-background-clip: text;
