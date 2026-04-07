@@ -37,7 +37,7 @@ def require_login() -> str:
         """, unsafe_allow_html=True)
         _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
         with col_btn:
-            if st.button("SIGN IN", type="primary", use_container_width=True, icon=":material/login:"):
+            if st.button("SIGN IN WITH GOOGLE", type="primary", use_container_width=True, icon=":material/login:"):
                 st.login("google")
         st.stop()
 
