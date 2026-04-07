@@ -210,38 +210,6 @@ button[data-testid="collapsedControl"] { display: none; }
 .stTextInput > div > div > input::placeholder {
     text-align: center;
 }
-/* ── Center radio buttons and checkboxes ── */
-div[role="radiogroup"] {
-    justify-content: center !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-}
-.stRadio > div,
-.stRadio > div > div {
-    justify-content: center !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-}
-.stCheckbox {
-    display: flex !important;
-    justify-content: center !important;
-}
-/* Center content in dialogs */
-div[role="dialog"] div[role="radiogroup"] {
-    justify-content: center !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-}
-div[role="dialog"] .stCheckbox {
-    display: flex !important;
-    justify-content: center !important;
-}
-div[role="dialog"] .stTextInput > div > div > input {
-    text-align: center;
-}
-div[role="dialog"] .stTextInput > div > div > input::placeholder {
-    text-align: center;
-}
 
 .stNumberInput > div > div > input {
     border-radius: 12px;
@@ -713,19 +681,15 @@ if st.session_state["step"] == "expenses":
     def add_expense_dialog():
         k = st.session_state.get("exp_counter", 0)
 
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Expense Description</div>', unsafe_allow_html=True)
-        desc = st.text_input("desc", placeholder="e.g. Dinner, Taxi, Hotel", key=f"dlg_desc_{k}", label_visibility="collapsed")
+        desc = st.text_input("Description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"dlg_desc_{k}")
+        amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"dlg_amt_{k}")
 
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Amount</div>', unsafe_allow_html=True)
-        amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"dlg_amt_{k}", label_visibility="collapsed")
-
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
-        paid_idx = st.radio("paid", range(len(member_emails)),
+        paid_idx = st.radio("Who paid?", range(len(member_emails)),
                             format_func=lambda i: display_names_list[i],
-                            horizontal=True, label_visibility="collapsed", key=f"dlg_paid_{k}")
+                            horizontal=True, key=f"dlg_paid_{k}")
         paid_by = member_emails[paid_idx]
 
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
+        st.write("**Who is part of this expense?**")
         involved = []
         inv_cols = st.columns(max(len(member_emails), 1))
         for idx, email in enumerate(member_emails):
@@ -733,9 +697,8 @@ if st.session_state["step"] == "expenses":
                 if st.checkbox(display_names_list[idx], value=True, key=f"dlg_inv_{k}_{idx}"):
                     involved.append(email)
 
-        st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-        split_type = st.radio("split", ["Equal", "Percentage", "Ratio"],
-                              horizontal=True, label_visibility="collapsed", key=f"dlg_split_{k}")
+        split_type = st.radio("How to split?", ["Equal", "Percentage", "Ratio"],
+                              horizontal=True, key=f"dlg_split_{k}")
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
