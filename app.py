@@ -205,10 +205,6 @@ button[data-testid="collapsedControl"] { display: none; }
 /* ── Input overrides ── */
 .stTextInput > div > div > input {
     border-radius: 12px;
-    text-align: center;
-}
-.stTextInput > div > div > input::placeholder {
-    text-align: center;
 }
 
 .stNumberInput > div > div > input {
@@ -681,12 +677,15 @@ if st.session_state["step"] == "expenses":
     def add_expense_dialog():
         k = st.session_state.get("exp_counter", 0)
 
-        desc = st.text_input("Description", placeholder="e.g. Dinner, Taxi, Hotel", key=f"dlg_desc_{k}")
-        amount_str = st.text_input("Amount", placeholder="e.g. 150.00", key=f"dlg_amt_{k}")
+        st.write("**Description**")
+        desc = st.text_input("desc", placeholder="e.g. Dinner, Taxi, Hotel", key=f"dlg_desc_{k}", label_visibility="collapsed")
+        st.write("**Amount**")
+        amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"dlg_amt_{k}", label_visibility="collapsed")
 
-        paid_idx = st.radio("Who paid?", range(len(member_emails)),
+        st.write("**Who paid?**")
+        paid_idx = st.radio("paid", range(len(member_emails)),
                             format_func=lambda i: display_names_list[i],
-                            horizontal=True, key=f"dlg_paid_{k}")
+                            horizontal=True, key=f"dlg_paid_{k}", label_visibility="collapsed")
         paid_by = member_emails[paid_idx]
 
         st.write("**Who is part of this expense?**")
@@ -697,8 +696,9 @@ if st.session_state["step"] == "expenses":
                 if st.checkbox(display_names_list[idx], value=True, key=f"dlg_inv_{k}_{idx}"):
                     involved.append(email)
 
-        split_type = st.radio("How to split?", ["Equal", "Percentage", "Ratio"],
-                              horizontal=True, key=f"dlg_split_{k}")
+        st.write("**How to split?**")
+        split_type = st.radio("split", ["Equal", "Percentage", "Ratio"],
+                              horizontal=True, key=f"dlg_split_{k}", label_visibility="collapsed")
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
@@ -721,11 +721,11 @@ if st.session_state["step"] == "expenses":
                     )
 
         st.markdown("<br>", unsafe_allow_html=True)
-        col_confirm, col_cancel = st.columns(2)
-        with col_confirm:
-            confirm = st.button("", key="dlg_confirm", use_container_width=True, icon=":material/check_circle:", type="primary")
+        col_cancel, col_confirm = st.columns(2)
         with col_cancel:
-            cancel = st.button("", key="dlg_cancel", use_container_width=True, icon=":material/cancel:")
+            cancel = st.button("Close", key="dlg_cancel", use_container_width=True, icon=":material/cancel:")
+        with col_confirm:
+            confirm = st.button("Done", key="dlg_confirm", use_container_width=True, icon=":material/check_circle:", type="primary")
 
         if cancel:
             st.rerun()
