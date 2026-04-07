@@ -550,6 +550,8 @@ if st.session_state["step"] == "events":
     st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 0.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
     # Create new event
     @st.dialog("New Event")
     def new_event_dialog():
