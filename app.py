@@ -790,7 +790,7 @@ if st.session_state["step"] == "expenses":
                     st.rerun()
 
     st.markdown("<br><br>", unsafe_allow_html=True)
-    col_add, col_exp, col_settle = st.columns(3)
+    _, col_add, _ = st.columns([1.5, 1.5, 1.5])
     with col_add:
         if st.button("Add Expense", type="primary", use_container_width=True, icon=":material/add:"):
             add_expense_dialog()
@@ -798,6 +798,7 @@ if st.session_state["step"] == "expenses":
     # ── Expense History ───────────────────────────────────────────────────────
 
     if expenses:
+        _, col_exp, _ = st.columns([1.5, 1.5, 1.5])
         with col_exp:
             exp_icon = ":material/expand_less:" if st.session_state.get("show_expenses") else ":material/expand_more:"
             if st.button(f"Expenses ({len(expenses)})", key="toggle_expenses", use_container_width=True, type="primary", icon=exp_icon):
@@ -978,6 +979,7 @@ if st.session_state["step"] == "expenses":
     # ── Settlements ───────────────────────────────────────────────────────────
 
     if expenses:
+        _, col_settle, _ = st.columns([1.5, 1.5, 1.5])
         with col_settle:
             settle_icon = ":material/expand_less:" if st.session_state.get("show_simplified") else ":material/expand_more:"
             if st.button("Settlements", key="toggle_settlements", use_container_width=True, type="primary", icon=settle_icon):
