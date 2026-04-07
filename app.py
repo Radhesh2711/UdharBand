@@ -590,7 +590,7 @@ if st.session_state["step"] == "events":
                     st.rerun()
 
     st.markdown('<div style="margin-top: 3rem;"></div>', unsafe_allow_html=True)
-    _, col_btn, _ = st.columns([1.5, 2, 1.5])
+    _, col_btn, _ = st.columns([2, 1, 2])
     with col_btn:
         new_event_container = st.container(key="new_event_btn")
         with new_event_container:
