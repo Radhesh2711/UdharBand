@@ -372,7 +372,7 @@ def render_expense_card(description, amount, paid_by_name):
 
 user_email = require_login()
 
-st.markdown('<div class="page-title" style="text-align: center; margin-bottom: 0.5rem;">UdharBand</div>', unsafe_allow_html=True)
+st.markdown('<div class="page-title" style="text-align: center; margin-bottom: 0;">UdharBand</div>', unsafe_allow_html=True)
 if st.session_state.get("step") != "home":
     _, col_home, _ = st.columns([2, 1, 2])
     with col_home:
@@ -798,6 +798,7 @@ if st.session_state["step"] == "expenses":
     # ── Expense History ───────────────────────────────────────────────────────
 
     if expenses:
+        st.markdown("<br>", unsafe_allow_html=True)
         _, col_exp, _ = st.columns([1.5, 1.5, 1.5])
         with col_exp:
             exp_icon = ":material/expand_less:" if st.session_state.get("show_expenses") else ":material/expand_more:"
@@ -979,6 +980,7 @@ if st.session_state["step"] == "expenses":
     # ── Settlements ───────────────────────────────────────────────────────────
 
     if expenses:
+        st.markdown("<br>", unsafe_allow_html=True)
         _, col_settle, _ = st.columns([1.5, 1.5, 1.5])
         with col_settle:
             settle_icon = ":material/expand_less:" if st.session_state.get("show_simplified") else ":material/expand_more:"
