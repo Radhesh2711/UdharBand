@@ -210,15 +210,37 @@ button[data-testid="collapsedControl"] { display: none; }
 .stTextInput > div > div > input::placeholder {
     text-align: center;
 }
-/* ── Center radio buttons ── */
-.stRadio > div,
-.stRadio > div > div,
-.stRadio div[role="radiogroup"],
-[data-testid="stRadio"] > div,
-[data-testid="stRadio"] div[role="radiogroup"] {
+/* ── Center radio buttons and checkboxes ── */
+div[role="radiogroup"] {
     justify-content: center !important;
     display: flex !important;
     flex-wrap: wrap !important;
+}
+.stRadio > div,
+.stRadio > div > div {
+    justify-content: center !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+.stCheckbox {
+    display: flex !important;
+    justify-content: center !important;
+}
+/* Center content in dialogs */
+div[role="dialog"] div[role="radiogroup"] {
+    justify-content: center !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+div[role="dialog"] .stCheckbox {
+    display: flex !important;
+    justify-content: center !important;
+}
+div[role="dialog"] .stTextInput > div > div > input {
+    text-align: center;
+}
+div[role="dialog"] .stTextInput > div > div > input::placeholder {
+    text-align: center;
 }
 
 .stNumberInput > div > div > input {
