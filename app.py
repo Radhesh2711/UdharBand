@@ -648,9 +648,9 @@ if st.session_state["step"] == "events":
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     show_delete = group_data and can_delete_group(user_email, group_data)
     if show_delete:
-        col_back, col_edit, col_delgrp = st.columns(3)
+        _, col_back, col_edit, col_delgrp, _ = st.columns([0.5, 1, 1, 1, 0.5])
     else:
-        col_back, col_edit = st.columns(2)
+        _, col_back, col_edit, _ = st.columns([1, 1, 1, 1])
     with col_back:
         if st.button("← My Groups", use_container_width=True):
             st.session_state["step"] = "home"
