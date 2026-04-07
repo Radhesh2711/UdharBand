@@ -340,7 +340,7 @@ def render_member_chips(emails, display_map):
     chips = ""
     for i, e in enumerate(emails):
         color, bg = CHIP_COLORS[i % len(CHIP_COLORS)]
-        chips += f'<span style="display:inline-block;border:1px solid {color};background:{bg};border-radius:20px;padding:0.3rem 0.8rem;margin:0.2rem 0.3rem;font-size:0.85rem;color:{color};font-weight:500;">{dn(e, display_map)}</span>'
+        chips += f'<span style="display:inline-block;border:1px solid {color};background:{bg};border-radius:20px;padding:0.4rem 1rem;margin:0.3rem 0.4rem;font-size:1.05rem;color:{color};font-weight:500;">{dn(e, display_map)}</span>'
     st.markdown(f'<div style="text-align: center;">{chips}</div>', unsafe_allow_html=True)
 
 
