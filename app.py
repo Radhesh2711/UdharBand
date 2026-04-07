@@ -550,24 +550,6 @@ if st.session_state["step"] == "events":
     st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 0.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
-    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Your Events</div>', unsafe_allow_html=True)
-
-    # List existing events
-    if events:
-        for ev in events:
-            _, col_center, _ = st.columns([1, 3, 1])
-            with col_center:
-                if st.button(f"{ev['name']}  ·  ${ev.get('total', 0):.2f}", key=f"ev_{ev['id']}", use_container_width=True, type="primary"):
-                    st.session_state["current_event"] = ev["id"]
-                    st.session_state["step"] = "expenses"
-                    st.rerun()
-    else:
-        st.markdown("""
-        <div class="card" style="text-align: center; color: #8888aa;">
-            No events yet. Create one below.
-        </div>
-        """, unsafe_allow_html=True)
-
     # Create new event
     @st.dialog("New Event")
     def new_event_dialog():
@@ -597,11 +579,29 @@ if st.session_state["step"] == "events":
                     st.session_state["step"] = "expenses"
                     st.rerun()
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
     with col_btn:
         if st.button("New Event", use_container_width=True, type="primary", icon=":material/add:"):
             new_event_dialog()
+
+    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Your Events</div>', unsafe_allow_html=True)
+
+    # List existing events
+    if events:
+        for ev in events:
+            _, col_center, _ = st.columns([1, 3, 1])
+            with col_center:
+                if st.button(f"{ev['name']}  ·  ${ev.get('total', 0):.2f}", key=f"ev_{ev['id']}", use_container_width=True, type="primary"):
+                    st.session_state["current_event"] = ev["id"]
+                    st.session_state["step"] = "expenses"
+                    st.rerun()
+    else:
+        st.markdown("""
+        <div class="card" style="text-align: center; color: #8888aa;">
+            No events yet. Create one above.
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     show_delete = group_data and can_delete_group(user_email, group_data)
