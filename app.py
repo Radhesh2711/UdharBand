@@ -537,7 +537,7 @@ if st.session_state["step"] == "add_members":
 
     # Add member button
     st.markdown('<div style="margin-top: 1.5rem;"></div>', unsafe_allow_html=True)
-    _, col_add_btn, _ = st.columns([2, 1, 2])
+    _, col_add_btn, _ = st.columns([1, 2, 1])
     with col_add_btn:
         if st.button("Member + Notify", use_container_width=True, type="primary", icon=":material/person_add:"):
             add_member_dialog()
