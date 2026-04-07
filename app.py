@@ -600,7 +600,7 @@ if st.session_state["step"] == "events":
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
     with col_btn:
-        if st.button("+ New Event", use_container_width=True, type="primary", icon=":material/add:"):
+        if st.button("New Event", use_container_width=True, type="primary", icon=":material/add:"):
             new_event_dialog()
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
