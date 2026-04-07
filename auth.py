@@ -27,7 +27,7 @@ def require_login() -> str:
                 Split expenses with friends, effortlessly.</div>
         </div>
         """, unsafe_allow_html=True)
-        _, col_btn, _ = st.columns([1, 2, 1])
+        _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
         with col_btn:
             if st.button("Sign in with Google", type="primary", use_container_width=True):
                 st.login("google")
