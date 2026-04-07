@@ -204,18 +204,6 @@ button[data-testid="stBaseButton-tertiary"] {
     border-radius: 12px;
     padding-top: 0.7rem !important;
     padding-bottom: 0.7rem !important;
-    font-weight: 700 !important;
-    font-size: 1.15rem !important;
-}
-/* Force font size on all button inner elements */
-.stButton > button *,
-.stButton button p,
-.stButton button span,
-button[data-testid^="stBaseButton"] *,
-button[data-testid^="stBaseButton"] p,
-button[data-testid^="stBaseButton"] span {
-    font-size: 1.15rem !important;
-    font-weight: 700 !important;
 }
 
 /* ── Input overrides ── */
@@ -596,10 +584,12 @@ if st.session_state["step"] == "events":
                     st.rerun()
 
     st.markdown('<div style="margin-top: 3rem;"></div>', unsafe_allow_html=True)
-    _, col_btn, _ = st.columns([2, 1, 2])
+    _, col_btn, _ = st.columns([1.5, 2, 1.5])
     with col_btn:
+        st.markdown('<style>.big-btn button, .big-btn button * { font-size: 1.3rem !important; font-weight: 700 !important; }</style><div class="big-btn">', unsafe_allow_html=True)
         if st.button("New Event", use_container_width=True, type="primary", icon=":material/add:"):
             new_event_dialog()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Your Events</div>', unsafe_allow_html=True)
 
