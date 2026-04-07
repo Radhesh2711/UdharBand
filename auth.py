@@ -19,7 +19,7 @@ def require_login() -> str:
     if not st.user.is_logged_in:
         st.markdown("""
         <div style="text-align: center; padding: 3rem 0;">
-            <div style="font-size: 2.5rem; font-weight: 700;
+            <div style="font-size: 4rem; font-weight: 700;
                  background: linear-gradient(135deg, #6C5CE7, #a29bfe, #fd79a8);
                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                  margin-bottom: 0.5rem;">UdharBand</div>
