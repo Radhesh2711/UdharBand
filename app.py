@@ -205,7 +205,7 @@ button[data-testid="stBaseButton-tertiary"] {
     padding-top: 0.7rem !important;
     padding-bottom: 0.7rem !important;
     font-weight: 700 !important;
-    font-size: 1.2rem !important;
+    font-size: 1.15rem !important;
 }
 
 /* ── Input overrides ── */
@@ -586,7 +586,7 @@ if st.session_state["step"] == "events":
                     st.rerun()
 
     st.markdown('<div style="margin-top: 3rem;"></div>', unsafe_allow_html=True)
-    _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
+    _, col_btn, _ = st.columns([2, 1, 2])
     with col_btn:
         if st.button("New Event", use_container_width=True, type="primary", icon=":material/add:"):
             new_event_dialog()
