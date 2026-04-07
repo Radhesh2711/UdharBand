@@ -153,17 +153,6 @@ html, body {
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.2rem;
 }
-/* Style the UdharBand home nav button as a title */
-button[kind="tertiary"] {
-    font-size: 2.2rem !important;
-    font-weight: 700 !important;
-    background: linear-gradient(135deg, #6C5CE7, #a29bfe, #fd79a8) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    cursor: pointer !important;
-}
 .page-subtitle {
     color: #8888aa;
     font-size: 0.95rem;
@@ -397,13 +386,17 @@ def render_expense_card(description, amount, paid_by_name):
 
 user_email = require_login()
 
-_, col_title, _ = st.columns([1, 2, 1])
-with col_title:
-    if st.button("UdharBand", key="home_nav", use_container_width=True, type="tertiary"):
-        st.session_state["step"] = "home"
-        st.session_state["current_group"] = None
-        st.session_state["current_event"] = None
-        st.rerun()
+st.markdown('<div class="page-title" style="text-align: center; margin-bottom: 0.5rem;">UdharBand</div>', unsafe_allow_html=True)
+if st.session_state.get("step") != "home":
+    _, col_home, _ = st.columns([2, 1, 2])
+    with col_home:
+        if st.button("Home", key="home_nav", use_container_width=True, type="tertiary", icon=":material/home:"):
+            st.session_state["step"] = "home"
+            st.session_state["current_group"] = None
+            st.session_state["current_event"] = None
+            st.rerun()
+else:
+    st.markdown("<br>", unsafe_allow_html=True)
 
 # Footer: logged-in status + logout (rendered at bottom via CSS)
 footer_html = f"""
