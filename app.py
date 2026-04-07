@@ -547,7 +547,7 @@ if st.session_state["step"] == "events":
     member_emails = [m["email"] for m in members]
     events = db.get_events_with_totals(group_id)
 
-    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 1.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 0.5rem 0 1.2rem 0;">{group_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
     st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Your Events</div>', unsafe_allow_html=True)
@@ -648,7 +648,7 @@ if st.session_state["step"] == "expenses":
     events = db.get_events(group_id)
     event_name = next((ev["name"] for ev in events if ev["id"] == event_id), "Event")
 
-    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 1.5rem 0 0.5rem 0;">{group_name}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 0.5rem 0 0.5rem 0;">{group_name}</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="text-align: center; font-size: 1.2rem; font-weight: 500; color: #a29bfe; margin: 0 0 1.2rem 0;">{event_name}</div>', unsafe_allow_html=True)
     render_member_chips(member_emails, display_map)
 
