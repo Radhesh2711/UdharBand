@@ -503,11 +503,51 @@ if st.session_state["step"] == "add_members":
     group_data = db.get_group(group_id)
     group_name = group_data["name"] if group_data else "Group"
 
-    st.markdown(f'<div class="section-header">Add Members to \'{group_name}\'</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 0.5rem 0 1.2rem 0;">Members of \'{group_name}\'</div>', unsafe_allow_html=True)
+
+    # Add member dialog
+    @st.dialog("Add Member")
+    def add_member_dialog():
+        mk = st.session_state.get("member_counter", 0)
+        st.write("**Name**")
+        new_name = st.text_input("name", placeholder="Enter their name", key=f"dlg_member_name_{mk}", label_visibility="collapsed")
+        st.write("**Email**")
+        new_email = st.text_input("email", placeholder="Enter their email address", key=f"dlg_member_email_{mk}", label_visibility="collapsed")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        _, col_cancel, col_confirm, _ = st.columns([1, 1, 1, 1])
+        with col_cancel:
+            if st.button("Close", key="mem_dlg_cancel", use_container_width=True, icon=":material/cancel:"):
+                st.rerun()
+        with col_confirm:
+            if st.button("Done", key="mem_dlg_confirm", use_container_width=True, icon=":material/check_circle:", type="primary"):
+                email = new_email.strip().lower()
+                name = new_name.strip()
+                if not email:
+                    st.error("Enter an email.")
+                elif "@" not in email:
+                    st.error("Please enter a valid email address.")
+                elif email in member_emails:
+                    st.error(f"'{email}' is already a member.")
+                else:
+                    db.add_member(group_id, email, name if name else None)
+                    notifications.notify_added_to_group(email, group_name, user_email, group_id)
+                    st.session_state["member_counter"] = st.session_state.get("member_counter", 0) + 1
+                    st.rerun()
+
+    # Add member button
+    st.markdown('<div style="margin-top: 1.5rem;"></div>', unsafe_allow_html=True)
+    _, col_add_btn, _ = st.columns([2, 1, 2])
+    with col_add_btn:
+        if st.button("Member + Notify", use_container_width=True, type="primary", icon=":material/person_add:"):
+            add_member_dialog()
+
+    # Current members list
+    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2.5rem 0 0.8rem 0;">Current Members</div>', unsafe_allow_html=True)
 
     if members:
         for i, m in enumerate(members):
-            c1, c2 = st.columns([5, 1])
+            _, c1, c2, _ = st.columns([0.5, 4, 0.5, 0.5])
             c1.markdown(f"""
             <div class="card" style="padding: 0.6rem 1rem; margin-bottom: 0.4rem;">
                 <span style="font-weight: 600; color: #E8E8F0;">{m['display_name']}</span>
@@ -520,34 +560,9 @@ if st.session_state["step"] == "add_members":
                     notifications.notify_removed_from_group(m["email"], group_name)
                     st.rerun()
 
-    if "member_counter" not in st.session_state:
-        st.session_state["member_counter"] = 0
-    mk = st.session_state["member_counter"]
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_name, col_email = st.columns(2)
-    with col_name:
-        new_name = st.text_input("Name", placeholder="Enter their name", key=f"member_name_{mk}")
-    with col_email:
-        new_email = st.text_input("Email", placeholder="Enter their email address", key=f"member_email_{mk}")
-    col_add, col_done = st.columns(2)
-
-    with col_add:
-        if st.button("Notify and + Member", use_container_width=True):
-            email = new_email.strip().lower()
-            name = new_name.strip()
-            if not email:
-                st.error("Enter an email.")
-            elif "@" not in email:
-                st.error("Please enter a valid email address.")
-            elif email in member_emails:
-                st.error(f"'{email}' is already a member.")
-            else:
-                db.add_member(group_id, email, name if name else None)
-                notifications.notify_added_to_group(email, group_name, user_email, group_id)
-                st.session_state["member_counter"] += 1
-                st.rerun()
-
+    # Done button
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    _, col_done, _ = st.columns([1.5, 1.5, 1.5])
     with col_done:
         if st.button("Done Adding Members →", use_container_width=True, type="primary"):
             if len(members) < 2:
