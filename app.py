@@ -503,7 +503,7 @@ if st.session_state["step"] == "add_members":
     group_data = db.get_group(group_id)
     group_name = group_data["name"] if group_data else "Group"
 
-    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 0.5rem 0 1.2rem 0;">&#9998; Edit {group_name}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; font-size: 1.8rem; font-weight: 700; color: #E8E8F0; margin: 0.5rem 0 1.2rem 0;">&#9998; {group_name}</div>', unsafe_allow_html=True)
 
     # Add member dialog
     @st.dialog("Add Member")
