@@ -858,6 +858,8 @@ if st.session_state["step"] == "expenses":
             exp_icon = ":material/expand_less:" if st.session_state.get("show_expenses") else ":material/expand_more:"
             if st.button(f"Expenses ({len(expenses)})", key="toggle_expenses", use_container_width=True, type="primary", icon=exp_icon):
                 st.session_state["show_expenses"] = not st.session_state.get("show_expenses", False)
+                if st.session_state["show_expenses"]:
+                    st.session_state["show_simplified"] = False
                 st.rerun()
 
         _show_expenses = st.session_state.get("show_expenses", False)
@@ -1038,6 +1040,8 @@ if st.session_state["step"] == "expenses":
             settle_icon = ":material/expand_less:" if st.session_state.get("show_simplified") else ":material/expand_more:"
             if st.button("Settlements", key="toggle_settlements", use_container_width=True, type="primary", icon=settle_icon):
                 st.session_state["show_simplified"] = not st.session_state.get("show_simplified", False)
+                if st.session_state["show_simplified"]:
+                    st.session_state["show_expenses"] = False
                 st.rerun()
 
         if st.session_state.get("show_simplified"):
