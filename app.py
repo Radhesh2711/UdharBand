@@ -845,7 +845,7 @@ if st.session_state["step"] == "expenses":
                     st.session_state["exp_counter"] = st.session_state.get("exp_counter", 0) + 1
                     st.rerun()
 
-    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
     col_add, col_exp, col_settle_btn = st.columns(3)
     with col_add:
         if st.button("Add Expense", type="primary", use_container_width=True, icon=":material/add:"):
