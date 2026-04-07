@@ -721,7 +721,7 @@ if st.session_state["step"] == "expenses":
                     )
 
         st.markdown("<br>", unsafe_allow_html=True)
-        col_cancel, col_confirm = st.columns(2)
+        _, col_cancel, col_confirm, _ = st.columns([1, 1, 1, 1])
         with col_cancel:
             cancel = st.button("Close", key="dlg_cancel", use_container_width=True, icon=":material/cancel:")
         with col_confirm:
