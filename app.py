@@ -789,17 +789,16 @@ if st.session_state["step"] == "expenses":
                     st.session_state["exp_counter"] = st.session_state.get("exp_counter", 0) + 1
                     st.rerun()
 
-    _, col_add_btn, _ = st.columns([1, 2, 1])
-    with col_add_btn:
-        if st.button("+ Add Expense", type="primary", use_container_width=True, icon=":material/add:"):
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col_add, col_exp, col_settle = st.columns(3)
+    with col_add:
+        if st.button("Add Expense", type="primary", use_container_width=True, icon=":material/add:"):
             add_expense_dialog()
 
     # ── Expense History ───────────────────────────────────────────────────────
 
     if expenses:
-        st.markdown("<br>", unsafe_allow_html=True)
-        _, col_exp_toggle, _ = st.columns([1, 3, 1])
-        with col_exp_toggle:
+        with col_exp:
             exp_icon = ":material/expand_less:" if st.session_state.get("show_expenses") else ":material/expand_more:"
             if st.button(f"Expenses ({len(expenses)})", key="toggle_expenses", use_container_width=True, type="primary", icon=exp_icon):
                 st.session_state["show_expenses"] = not st.session_state.get("show_expenses", False)
@@ -979,9 +978,7 @@ if st.session_state["step"] == "expenses":
     # ── Settlements ───────────────────────────────────────────────────────────
 
     if expenses:
-        st.markdown("<br>", unsafe_allow_html=True)
-        _, col_settle_toggle, _ = st.columns([1, 3, 1])
-        with col_settle_toggle:
+        with col_settle:
             settle_icon = ":material/expand_less:" if st.session_state.get("show_simplified") else ":material/expand_more:"
             if st.button("Settlements", key="toggle_settlements", use_container_width=True, type="primary", icon=settle_icon):
                 st.session_state["show_simplified"] = not st.session_state.get("show_simplified", False)
