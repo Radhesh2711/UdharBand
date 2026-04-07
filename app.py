@@ -504,7 +504,7 @@ if st.session_state["step"] == "add_members":
             </div>
             """, unsafe_allow_html=True)
             if m["email"] != user_email or len(members) > 1:
-                if c2.button("Remove", key=f"rm_{m['email']}"):
+                if c2.button("", key=f"rm_{m['email']}", icon=":material/delete:"):
                     db.remove_member(group_id, m["email"])
                     notifications.notify_removed_from_group(m["email"], group_name)
                     st.rerun()
