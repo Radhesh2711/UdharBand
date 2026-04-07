@@ -200,6 +200,7 @@ button[data-testid="collapsedControl"] { display: none; }
     border-radius: 12px;
     padding-top: 0.7rem !important;
     padding-bottom: 0.7rem !important;
+    font-weight: 600 !important;
 }
 
 /* ── Input overrides ── */
