@@ -698,16 +698,22 @@ if st.session_state["step"] == "expenses":
         amount_str = st.text_input("amt", placeholder="e.g. 150.00", key=f"dlg_amt_{k}", label_visibility="collapsed")
 
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who paid?</div>', unsafe_allow_html=True)
-        paid_by_name = st.pills("paid", display_names_list, default=display_names_list[0], key=f"dlg_paid_{k}", label_visibility="collapsed")
-        paid_idx = display_names_list.index(paid_by_name) if paid_by_name in display_names_list else 0
+        paid_idx = st.radio("paid", range(len(member_emails)),
+                            format_func=lambda i: display_names_list[i],
+                            horizontal=True, label_visibility="collapsed", key=f"dlg_paid_{k}")
         paid_by = member_emails[paid_idx]
 
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">Who is part of this expense?</div>', unsafe_allow_html=True)
-        involved_names = st.pills("involved", display_names_list, default=display_names_list, selection_mode="multi", key=f"dlg_inv_{k}", label_visibility="collapsed")
-        involved = [member_emails[display_names_list.index(n)] for n in involved_names] if involved_names else []
+        involved = []
+        inv_cols = st.columns(max(len(member_emails), 1))
+        for idx, email in enumerate(member_emails):
+            with inv_cols[idx]:
+                if st.checkbox(display_names_list[idx], value=True, key=f"dlg_inv_{k}_{idx}"):
+                    involved.append(email)
 
         st.markdown('<div style="text-align: center; color: #a29bfe; font-weight: 500; margin: 0.5rem 0;">How to split?</div>', unsafe_allow_html=True)
-        split_type = st.pills("split", ["Equal", "Percentage", "Ratio"], default="Equal", key=f"dlg_split_{k}", label_visibility="collapsed")
+        split_type = st.radio("split", ["Equal", "Percentage", "Ratio"],
+                              horizontal=True, label_visibility="collapsed", key=f"dlg_split_{k}")
 
         split_inputs = {}
         if split_type == "Percentage" and involved:
