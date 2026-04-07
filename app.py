@@ -579,13 +579,13 @@ if st.session_state["step"] == "events":
                     st.session_state["step"] = "expenses"
                     st.rerun()
 
-    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin-top: 3rem;"></div>', unsafe_allow_html=True)
     _, col_btn, _ = st.columns([1.5, 1.5, 1.5])
     with col_btn:
         if st.button("New Event", use_container_width=True, type="primary", icon=":material/add:"):
             new_event_dialog()
 
-    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 2rem 0 0.8rem 0;">Your Events</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; font-size: 1.5rem; font-weight: 600; color: #a29bfe; margin: 3rem 0 0.8rem 0;">Your Events</div>', unsafe_allow_html=True)
 
     # List existing events
     if events:
