@@ -919,7 +919,7 @@ if st.session_state["step"] == "expenses":
                         "Description", value=exp["description"], key=f"ed_desc_{i}"
                     )
                     ed_amount = st.number_input(
-                        "Amount", min_value=0.01, step=0.01, format="%.2f",
+                        "Amount", min_value=0.0, step=0.01, format="%.2f",
                         value=float(exp["amount"]), key=f"ed_amount_{i}"
                     )
 
@@ -976,6 +976,8 @@ if st.session_state["step"] == "expenses":
                             shares = {}
                             if not ed_desc.strip():
                                 error = "Enter a description."
+                            elif ed_amount <= 0:
+                                error = "Amount must be greater than 0."
                             elif not ed_involved:
                                 error = "Select at least one person involved."
                             elif ed_split == "Equal":
